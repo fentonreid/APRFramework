@@ -1,0 +1,53 @@
+# Genetic Program Hyperparameters
+gp: 
+    generations: 20
+    populationSize: 100
+    crossoverRate: 0.75
+    mutationRate: 0.05
+    mutationOperators: 
+        - mutationOperator1
+        - mutationOperator2
+        - mutationOperator3
+        # mutationOperator3 is the name of the class that implements MutationOperator interface
+        # Generated at run time and verified
+    # Alternatively we can have a default
+    mutationOperators: "all" 
+    # Which will specify all children of MutationOperator
+    
+# Defects4J Hyperparameters and test case selection
+defects4J: 
+    # For testCaseSelection I will only include active-id's using active-bugs.csv
+    # If we select via identifier
+    testCaseSelection: 
+        method: identifier
+        selection: 
+            - "Chart"
+            - "Closure"
+    
+    # Select test cases to use by range of bug id
+    # TODO: NEED TO CHECK IF ACTIVE ID INCREMENTS OR STARTS AT ONE FOR EACH IDENTIFIER
+    testCaseSelection: 
+        method: range
+        selection: 
+            - 1-26
+            - 56
+            - 25-28
+        exclude: 
+            - 15
+            - 20 
+            - 25
+                 
+# Output method
+output: 
+    # Summary will be for each mutation operator the number of tests passed, time etc
+    summary: 
+        csv: summary.csv
+    
+    # Full is the details and programs generated for each test if applicable
+    # Will be a java project: 
+    # identifier/_bugID/mutationOperatorX
+    # Includes a .txt file with Defects4J details
+    # Includes a class file with the generated code from the GP
+    
+    full: 
+        javaClass: complete.java
