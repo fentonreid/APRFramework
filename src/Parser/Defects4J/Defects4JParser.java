@@ -1,8 +1,9 @@
 package Parser.Defects4J;
 
 public class Defects4JParser {
-    private Object testCaseSelection;
+    private TestCaseSelection testCaseSelection;
 
-    public Object getTestCaseSelection() { return testCaseSelection; }
-    public void setTestCaseSelection(Object testCaseSelection) { this.testCaseSelection = testCaseSelection; }
+    public TestCaseSelection getTestCaseSelection() { return testCaseSelection; }
+    public void setTestCaseSelection(TestCaseSelection testCaseSelection) { this.testCaseSelection = testCaseSelection; }
+
 }

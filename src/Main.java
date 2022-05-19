@@ -1,12 +1,9 @@
-import Parser.GP.MutationOperators;
 import Parser.Parser;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
@@ -16,14 +13,16 @@ public class Main {
 
             // Parse generic object properties
             try {
-                ArrayList<String> mutationOperators = new MutationOperators(configData.getGp().getMutationOperators()).parseObjectStructure();
+                ArrayList<String> mutationOperators = configData.getGp().parseObjectStructure();
                 System.out.println(mutationOperators);
+
+                ArrayList<String> testCaseSelection = configData.getDefects4J().getTestCaseSelection().parseObjectStructure();
+                System.out.println(testCaseSelection);
             } catch (ClassNotFoundException ex) {
                 throw new Exception(ex);
             }
 
             System.out.println("Initial parse complete");
-
 
         } catch (ArrayIndexOutOfBoundsException ex) {
             System.out.println("Missing config.yml argument");

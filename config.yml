@@ -1,6 +1,15 @@
-# Option 1 -- Specify what you want
 gp:
-  mutationOperators:
-    - MutationOperator1
-    - MutationOperator2
-    - MutationOperator3
+  generations: 20
+  populationSize: 100
+  crossoverRate: 0.75
+  mutationRate: 0.05
+  mutationOperators: all
+
+defects4J:
+  # For testCaseSelection I will only include active-id's using active-bugs.csv
+  # If we select via identifier
+  testCaseSelection:
+    method: identifier
+    selection:
+      - "Chart"
+      - "Closure"
