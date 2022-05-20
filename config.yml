@@ -13,3 +13,10 @@ defects4J:
     selection:
       - "Chart"
       - "Closure"
+
+output:
+  summary:
+    csv: summary
+
+  full:
+    javaClass: complete

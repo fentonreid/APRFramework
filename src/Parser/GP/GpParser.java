@@ -27,14 +27,15 @@ public class GpParser {
     public Object getMutationOperators() { return mutationOperators; }
     public void setMutationOperators(Object mutationOperators) { this.mutationOperators = mutationOperators; }
 
-    public ArrayList<String> parseObjectStructure() throws Exception {
+    public void parseObjectStructure() throws Exception {
         // Check type of mutationOperatorObject
         if (getMutationOperators().getClass() == ArrayList.class) {
             ArrayList<String> mutationOperators = (ArrayList<String>) getMutationOperators();
 
             // Check that these extend mutationOperator class
             if (validateAllMutationOperators(mutationOperators)) {
-                return mutationOperators;
+                setMutationOperators(mutationOperators);
+                return;
             }
 
             throw new Exception("Mutation Operators is not valid, refer to the documentation and ensure mutationOperator names match");
@@ -45,7 +46,8 @@ public class GpParser {
             // Further, check that the mutationOperators is set to "all"
             if(mutationOperatorOption.equals("all")) {
                 // Get all the mutationOperators that extend the MutationOperator class
-                return getAllMutationOperatorChildren();
+                setMutationOperators(mutationOperators);
+                return;
             }
 
             throw new Exception("mutationOperators does not have a valid string flag, use 'all' or specify a list of mutation operators");

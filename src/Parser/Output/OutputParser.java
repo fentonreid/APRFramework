@@ -1,7 +1,6 @@
 package Parser.Output;
 
 public class OutputParser {
-
     private Summary summary;
     private Full full;
 

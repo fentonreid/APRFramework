@@ -4,6 +4,8 @@ import Parser.Defects4J.Defects4JParser;
 import Parser.GP.GpParser;
 import Parser.Output.OutputParser;
 
+import java.util.ArrayList;
+
 public class Parser {
     private GpParser gp;
     private Defects4JParser defects4J;
@@ -19,4 +21,8 @@ public class Parser {
 
     public OutputParser getOutput() { return output; }
     public void setOutput(OutputParser output) { this.output = output; }
+
+    public boolean propertiesSet() {
+        return getGp() != null && getDefects4J() != null && getOutput() != null;
+    }
 }
