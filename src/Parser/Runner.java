@@ -4,7 +4,6 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 
 public class Runner {
     private final String configFileName;
@@ -12,7 +11,7 @@ public class Runner {
     public Runner(String[] args) {
         this.configFileName = args[0];
     }
-    
+
     public Parser main() {
         try {
             // Parse the given YAML configuration file using the Parser.Parser class definition
@@ -23,13 +22,19 @@ public class Runner {
                 throw new Exception("Please include a gp, defects4J and output model in your yaml configuration");
             }
 
-            // Parse generic object properties
+            // Setup configData objects
             try {
-                // Cast mutationOperators object to ArrayList<String>
-                configData.getGp().parseObjectStructure();
+                // Setup GP
+                configData.getGp().setup();
 
-                // Cast testCaseSelection object to TestCaseSelection class
-                configData.getDefects4J().getTestCaseSelection().parseObjectStructure();
+                // Setup Defects4J
+                configData.getDefects4J().setup();
+                configData.getDefects4J().getTestCaseSelection().setup();
+
+                // Setup Output
+                configData.getOutput().setup();
+                configData.getOutput().getFull().setup();
+                configData.getOutput().getSummary().setup();
 
             } catch (ClassNotFoundException ex) {
                 throw new Exception(ex);

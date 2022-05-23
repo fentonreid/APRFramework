@@ -22,7 +22,11 @@ public class Parser {
     public OutputParser getOutput() { return output; }
     public void setOutput(OutputParser output) { this.output = output; }
 
-    public boolean propertiesSet() {
-        return getGp() != null && getDefects4J() != null && getOutput() != null;
+    public boolean propertiesSet() throws Exception {
+        if(getGp() == null) { throw new Exception("gp property is missing"); }
+        if(getDefects4J() == null) { throw new Exception("defects4J property is missing"); }
+        if(getOutput() == null) { throw new Exception("output property is missing"); }
+
+        return true;
     }
 }

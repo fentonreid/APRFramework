@@ -1,18 +1,16 @@
 gp:
-  generations: 20
-  populationSize: 100
+  generations: 10
+  populationSize: 1_000
   crossoverRate: 0.75
   mutationRate: 0.05
   mutationOperators: all
 
 defects4J:
-  # For testCaseSelection I will only include active-id's using active-bugs.csv
-  # If we select via identifier
   testCaseSelection:
     method: identifier
     selection:
-      - "Chart"
-      - "Closure"
+      Chart: all
+      Closure: [1-4, 6, 8-12] # 1,2,3,4,6,8,9,10,11,12
 
 output:
   summary:

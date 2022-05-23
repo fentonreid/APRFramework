@@ -12,6 +12,7 @@ public class GpParser {
     private Object mutationOperators;
     private final String classPathPrefix = "GP.MutationOperators.";
 
+
     public int getGenerations() { return generations; }
     public void setGenerations(int generations) { this.generations = generations; }
 
@@ -26,6 +27,17 @@ public class GpParser {
 
     public Object getMutationOperators() { return mutationOperators; }
     public void setMutationOperators(Object mutationOperators) { this.mutationOperators = mutationOperators; }
+
+    public void setup() throws Exception {
+        // Check that gp properties are within bounds
+        if (getGenerations() < 10 || getGenerations() > 10_000) { throw new Exception("Generation property has to be between a value of 10 and 10,000"); }
+        if (getPopulationSize() < 10 || getPopulationSize() > 10_000) { throw new Exception("PopulationSize property has to be between a value of 10 and 10,000"); }
+        if (getCrossoverRate() < 0.0 || getCrossoverRate() > 1.0) { throw new Exception("CrossoverRate property has to be 0 and 1"); }
+        if (getMutationRate() < 0.0 || getMutationRate() > 1.0) { throw new Exception("MutationRate property has to be 0 and 1"); }
+        if (getMutationOperators() == null) { throw new Exception("MutationOperators property is null"); }
+
+        parseObjectStructure();
+    }
 
     public void parseObjectStructure() throws Exception {
         // Check type of mutationOperatorObject
@@ -46,7 +58,7 @@ public class GpParser {
             // Further, check that the mutationOperators is set to "all"
             if(mutationOperatorOption.equals("all")) {
                 // Get all the mutationOperators that extend the MutationOperator class
-                setMutationOperators(mutationOperators);
+                setMutationOperators(getAllMutationOperatorChildren());
                 return;
             }
 

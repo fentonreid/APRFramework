@@ -5,4 +5,8 @@ public class Full {
 
     public String getJavaClass() { return javaClass; }
     public void setJavaClass(String javaClass) { this.javaClass = javaClass; }
+
+    public void setup() throws Exception {
+        if(getJavaClass() == null) { throw new Exception("javaClass property is missing"); }
+    }
 }
