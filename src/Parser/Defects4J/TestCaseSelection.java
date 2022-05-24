@@ -1,7 +1,6 @@
 package Parser.Defects4J;
 
-import java.io.File;
-import java.io.IOException;
+import Defects4J.perlInterpreter;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -10,6 +9,8 @@ public class TestCaseSelection {
     private Object selection;
 
     private Map<String, HashSet<Integer>> identifierToIdMap;
+
+    private Map<String, HashSet<Integer>> defects4JIdentifierToIdMap;
 
     public String getMethod() { return method.toLowerCase().trim(); }
     public void setMethod(String method) {
@@ -26,11 +27,14 @@ public class TestCaseSelection {
     public Map<String, HashSet<Integer>> getIdentifierToIdMap() { return identifierToIdMap; }
     public void setIdentifierToIdMap(Map<String, HashSet<Integer>> identifierToIdMap) { this.identifierToIdMap = identifierToIdMap; };
 
+    public Map<String, HashSet<Integer>> getDefects4JIdentifierToIdMap() { return defects4JIdentifierToIdMap; }
+    public void setDefects4JIdentifierToIdMap(Map<String, HashSet<Integer>> defects4JIdentifierToIdMap) { this.defects4JIdentifierToIdMap = defects4JIdentifierToIdMap; };
+
     public void setup() throws Exception {
         if (getMethod() == null) { throw new Exception("Method property must be provided"); }
 
+        getProjectIds();
         parseObjectStructure();
-        validateIdentifierToIdMap();
     }
 
     public void parseObjectStructure() throws Exception {
@@ -46,16 +50,25 @@ public class TestCaseSelection {
             LinkedHashMap<String, ?> selections = (LinkedHashMap<String, ?>) getSelection();
 
             for (String selection : selections.keySet()) {
+                // Make sure that the selection value is not null
+                if (selections.get(selection) == null) {
+                   throw new Exception("Identifier '" + selection + "' there is no associated value. Specify a list of bug id's or the provide the string all as the value");
+                }
+
+                // If selection is a valid project id
+                if(!getDefects4JIdentifierToIdMap().containsKey(selection)) {
+                    throw new Exception("Identifier '" + selection + "' is not a valid Defects4J project id.\n The following project id's are valid: " + getDefects4JIdentifierToIdMap().keySet());
+                }
+
                 // If the current identifier has a value of all
-                if(selections.get(selection) instanceof String) {
-                    if(selections.get(selection).toString().toLowerCase().trim().equals("all")) {
-                        // Convert string id to integer id
-                        identifierToIdMap.put(selection, null);
+                if (selections.get(selection) instanceof String) {
+                    if (selections.get(selection).toString().toLowerCase().trim().equals("all")) {
+                        identifierToIdMap.put(selection, getDefects4JIdentifierToIdMap().get(selection));
                         continue;
                     }
                         throw new Exception(" For selection '" + selection + "' the string value is invalid");
 
-                } else if(selections.get(selection) instanceof ArrayList) {
+                } else if (selections.get(selection) instanceof ArrayList) {
                     Object[] selectedBugIds = ((ArrayList<?>) selections.get(selection)).toArray();
                     HashSet<Integer> integerIdSet = new HashSet<>();
 
@@ -70,12 +83,12 @@ public class TestCaseSelection {
                                 String[] idSplit = ((String) id).split("-");
                                 int[] idRange = IntStream.rangeClosed(Integer.parseInt(idSplit[0]), Integer.parseInt(idSplit[1])).toArray();
 
-                                for(int intInRange: idRange) {
+                                for (int intInRange: idRange) {
                                     integerIdSet.add(intInRange);
                                 }
 
                             } catch (Exception ex) {
-                                throw new Exception("For identifier " + selection + " could not split " + (String) id + ", make sure that you split by '-' and do not include non-numeric values");
+                                throw new Exception("For identifier " + selection + " could not split " + id + ", make sure that you split by '-' and do not include non-numeric values");
                             }
 
                         } else {
@@ -87,41 +100,51 @@ public class TestCaseSelection {
                 }
             }
 
-        } else if (getMethod().equals("all")) {
-            // Ensure selection property is excluded
-            if (getSelection() != null) {
-                throw new Exception("For method " + getMethod() + " the selection property is not allowed");
+            if (validIdentifierToIdMap(identifierToIdMap)) {
+                setIdentifierToIdMap(identifierToIdMap);
             }
 
-            identifierToIdMap.put(null, null);
-
-            return;
+        } else if (getMethod().equals("all")) {
+            if (getSelection() != null) { throw new Exception("For method " + getMethod() + " the selection property is not allowed"); }
+            setIdentifierToIdMap(getDefects4JIdentifierToIdMap());
 
         } else {
             throw new Exception("The method property '" + getMethod() + "' is invalid");
         }
-
-        setIdentifierToIdMap(identifierToIdMap);
     }
 
-    private void validateIdentifierToIdMap() throws IOException {
-        // •	We want a list of all projects
-        // •	Get this via ‘perl defects4j pids” -> a list of projects, one each line
+    private void getProjectIds() throws Exception {
+        Map<String, HashSet<Integer>> defectsIdentifierToIdMap = new HashMap<>();
 
-        // Figure out how to call perl defects4j and get the list id's back
-        System.out.println("RUNNING PROCESS BUILDER");
-        // Need to change working directory
-        ProcessBuilder ps = new ProcessBuilder("perl", "defects4j");
-        ps.directory(new File("C:\\Users\\Fenton\\Documents\\Masters_Year\\Dissertation\\defects4j\\framework\\bin"));
+        // Get current project ids that are a part of Defects4J
+        ArrayList<String> projectIds = perlInterpreter.getStandardInput(new String[]{"perl", "defects4J", "pids"});
 
-        ps.start();
-        System.out.println("STOPPING PROCESS BUILDER");
+        // Active bug id's of each project
+        for (String project : projectIds) {
+            ArrayList<String> currentBugIdsAsString = perlInterpreter.getStandardInput(new String[]{"perl", "defects4J", "bids", "-p", project});
+            HashSet<Integer> currentBugIds = new HashSet<>();
 
-        // We start the process in the defects4j folder
+            for (String id : currentBugIdsAsString) {
+                currentBugIds.add(Integer.parseInt(id));
+            }
 
-        //List<String> results = readOutput(ps.getInputStream());
+            defectsIdentifierToIdMap.put(project, currentBugIds);
+        }
 
+        setDefects4JIdentifierToIdMap(defectsIdentifierToIdMap);
+    }
 
+    private boolean validIdentifierToIdMap(Map<String, HashSet<Integer>> identifierIdMap) throws Exception {
+        for (String identifier : identifierIdMap.keySet()) {
+            // Perform relative complement of identifier ids against known Defects4J ids
+            Set<Integer> relativeComplement = new HashSet<>(identifierIdMap.get(identifier));
+            relativeComplement.removeAll(getDefects4JIdentifierToIdMap().get(identifier));
 
+            if(relativeComplement.size() != 0) {
+                throw new Exception("Identifier '" + identifier + "' has invalid id(s) " + relativeComplement.toString());
+            }
+        }
+
+        return true;
     }
 }
