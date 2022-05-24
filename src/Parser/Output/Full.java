@@ -1,12 +1,12 @@
 package Parser.Output;
 
 public class Full {
-    private String javaClass;
+    private String jar;
 
-    public String getJavaClass() { return javaClass; }
-    public void setJavaClass(String javaClass) { this.javaClass = javaClass; }
+    public String getJar() { return jar; }
+    public void setJar(String jar) { this.jar = jar; }
 
     public void setup() throws Exception {
-        if(getJavaClass() == null) { throw new Exception("javaClass property is missing"); }
+        if(getJar() == null) { throw new Exception("'jar' property is missing"); }
     }
 }

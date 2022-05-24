@@ -17,4 +17,4 @@ output:
     csv: summary
 
   full:
-    javaClass: complete
+    jar: complete
