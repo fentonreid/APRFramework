@@ -2,6 +2,7 @@ package Output.Full;
 
 import Defects4J.perlInterpreter;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,9 +64,8 @@ public final class JavaProjectSkeleton {
 
             // Create buggy
             //ArrayList<String> createBuggy = perlInterpreter.getStandardInput(new String[]{"perl", "defects4j", "checkout", "-p", pathVariables.getIdentifier(), "-v", id + "b", "-w", path + "\\Defects4JBuggy"});
-            ArrayList<String> createBuggy = perlInterpreter.getStandardInput(new String[]{"perl", "defects4j", "checkout", "-p", "Lang", "-v",  "1b", "-w", "tmp/src/Lang/BID_1/Defects4JBuggy"});
-
-
+            //ArrayList<String> createBuggy = perlInterpreter.getStandardInput(new String[]{"perl", "defects4j", "checkout", "-p", "Lang", "-v",  "1b", "-w", path.toAbsolutePath() + "/Defects4JBuggy"});
+            // we are in the working directory defects4j/framework/bin, so this needs to be, project path
 
             System.out.println("test");
 
@@ -82,16 +82,11 @@ public final class JavaProjectSkeleton {
 
     }
 
-    public static void copyConfigurationYAML(Path configPath) throws Exception {
-        // Copy over current configYAML in this project to the template root directory
-        Path destination = null;
-
+    public static void copyFileToDestination(Path target, Path destination) throws Exception {
         try {
-            destination = Paths.get(getRootPath().toString(), configPath.getFileName().toString());
-            Files.copy(configPath, destination);
-
+            Files.copy(target, destination);
         } catch (IOException ex) {
-            throw new Exception("Could not copy '" + configPath + "' to '" + destination + "'");
+            throw new Exception("Could not copy '" + target.toAbsolutePath() + "' to '" + destination.toAbsolutePath() + "'");
         }
     }
 
@@ -106,8 +101,8 @@ public final class JavaProjectSkeleton {
             // Insert buggy implementation and fixed versions of each bug
             populateBuggyAndFixed(projectPaths.getIdentifierBIDPaths());
 
-            // Copy over config.yaml
-            copyConfigurationYAML(projectPaths.getConfigurationYAMLPath());
+            // Copy over config.yaml -> config.yml -> [rootPath]/config.yml
+            copyFileToDestination(projectPaths.getConfigurationYAMLPath(), Paths.get(getRootPath().toString(), projectPaths.getConfigurationYAMLPath().getFileName().toString()));
 
 
         } catch (Exception ex) {
