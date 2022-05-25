@@ -35,7 +35,8 @@ public class Runner {
                 configData.getOutput().setup();
                 configData.getOutput().getFull().setup();
                 configData.getOutput().getSummary().setup();
-
+                configData.getOutput().setConfigYAMLName(configFileName);
+                
             } catch (ClassNotFoundException ex) {
                 throw new Exception(ex);
             }

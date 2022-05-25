@@ -9,8 +9,9 @@ defects4J:
   testCaseSelection:
     method: identifier
     selection:
-      Chart: all
-      Closure: [1-4, 6, 8-12] # 1,2,3,4,6,8,9,10,11,12
+      Lang: [1]
+      #Chart: all
+      #Closure: [1-4, 6, 8-12] # 1,2,3,4,6,8,9,10,11,12
 
 output:
   summary:

@@ -3,10 +3,7 @@ import Output.Full.ProjectPaths;
 import Parser.Parser;
 import Parser.Runner;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
-
-public class Main {
+public class APRFramework {
     public static void main(String[] args) throws Exception {
         // Parse config.yaml
         Parser parsedObjects = new Runner(args).main();
@@ -17,7 +14,7 @@ public class Main {
         // Create tmp directory with correct structures based on the passed in config.yaml
         JavaProjectSkeleton.setProjectPaths(projectPaths);
         JavaProjectSkeleton.main();
-        
+
         System.out.println("");
 
 
