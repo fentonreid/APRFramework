@@ -34,4 +34,4 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
       
       - name: Build and push to Dockerhub
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME}}/aprframework:$(date + %s)
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME}}/aprframework:$(git rev-parse --short "$GITHUB_SHA")
