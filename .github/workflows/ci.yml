@@ -22,7 +22,7 @@ jobs:
       - name: Build Dockerfile -> Development workflow
         run: docker build -t aprframework:$(git rev-parse --short "$GITHUB_SHA") .
 
-      - name: Test APRFramework + Defects4j
+      #- name: Test APRFramework + Defects4j
       #  run: | 
       #      docker run aprframework:$(git rev-parse --short "$GITHUB_SHA") testDefects4j
       #      docker run aprframework:$(git rev-parse --short "$GITHUB_SHA") testAPRFramework
