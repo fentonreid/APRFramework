@@ -1,3 +1,14 @@
-APRFramework.iml
-.idea
-.out
+# Compiled class file
+*.class
+
+# Jar Files
+*.jar
+
+# IntelliJ
+.idea/**
+out/**
+*.iml
+
+# Defects4j folder
+defects4j/**
+defects4j 
