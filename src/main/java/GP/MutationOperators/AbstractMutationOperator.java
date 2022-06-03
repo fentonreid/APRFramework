@@ -1,4 +1,4 @@
-package com.GP.MutationOperators;
+package GP.MutationOperators;
 
 public abstract class AbstractMutationOperator {
     public abstract void testHello();

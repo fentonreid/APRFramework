@@ -1,7 +1,7 @@
-package com.GP.MutationOperators;
+package GP.MutationOperators;
 
-public class MutationOperator3 extends AbstractMutationOperator{
-    public MutationOperator3() {
+public class MutationOperator1 extends AbstractMutationOperator {
+    public MutationOperator1() {
         testHello();
     }
 
