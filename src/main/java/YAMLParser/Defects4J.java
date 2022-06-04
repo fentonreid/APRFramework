@@ -1,13 +1,12 @@
-package YAMLParser;
+package main.java.YAMLParser;
 
-import Util.ShellProcessBuilder;
-
+import main.java.Util.ShellProcessBuilder;
 import java.util.*;
 import java.util.stream.IntStream;
 
 @SuppressWarnings("unchecked")
 public class Defects4J {
-    Map<String, HashSet<Integer>> selectedTestCases = new HashMap<>();
+    public Map<String, HashSet<Integer>> selectedTestCases = new HashMap<>();
 
     public Defects4J(LinkedHashMap<String, Object> defects4jHashMap) throws Exception {
         parse(defects4jHashMap);

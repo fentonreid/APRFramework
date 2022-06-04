@@ -1,4 +1,4 @@
-package YAMLParser;
+package main.java.YAMLParser;
 
 import java.util.LinkedHashMap;
 

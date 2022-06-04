@@ -1,4 +1,4 @@
-package GP.MutationOperators;
+package main.java.GP.MutationOperators;
 
 public class MutationOperator1 extends AbstractMutationOperator {
     public MutationOperator1() {

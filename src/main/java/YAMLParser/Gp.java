@@ -1,4 +1,4 @@
-package YAMLParser;
+package main.java.YAMLParser;
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -11,33 +11,39 @@ public class Gp {
     public int populationSize;
     public double mutationRate;
     public ArrayList<String> mutationOperators = new ArrayList<>();
+    public int iterationsPerBug;
 
     public Gp(LinkedHashMap<String, Object> gpHashMap) throws Exception {
         parse(gpHashMap);
     }
 
     public void parse(LinkedHashMap<String, Object> gpHashMap) throws Exception {
-        // Ensure property values of the YAML gp object are present
         if (!gpHashMap.containsKey("generations")) { throw new Exception("'generations' property is missing in the config.yml 'gp' object "); }
-        if (!gpHashMap.containsKey("populationSize")) { throw new Exception("'populationSize' property is missing in the config.yml 'gp' object "); }
-        if (!gpHashMap.containsKey("mutationRate")) { throw new Exception("'mutationRate' property is missing in the config.yml 'gp' object "); }
-        if (!gpHashMap.containsKey("mutationOperators")) { throw new Exception("'mutationOperators' property is missing in the config.yml 'gp' object "); }
-
-        // Ensure that the given property values are of the correct type
         if (!(gpHashMap.get("generations") instanceof Integer)) { throw new Exception("'generations' property must be an integer"); }
+
+        if (!gpHashMap.containsKey("populationSize")) { throw new Exception("'populationSize' property is missing in the config.yml 'gp' object "); }
         if (!(gpHashMap.get("populationSize") instanceof Integer)) { throw new Exception("'populationSize' property must be an integer"); }
+
+        if (!gpHashMap.containsKey("mutationRate")) { throw new Exception("'mutationRate' property is missing in the config.yml 'gp' object "); }
         if (!(gpHashMap.get("mutationRate") instanceof Double)) { throw new Exception("'mutationRate' property must be a double"); }
+
+        if (!gpHashMap.containsKey("mutationOperators")) { throw new Exception("'mutationOperators' property is missing in the config.yml 'gp' object "); }
         if (!(gpHashMap.get("mutationOperators") instanceof String) && !(gpHashMap.get("mutationOperators") instanceof ArrayList)) { throw new Exception("'mutationOperators' property must be a String with the value of 'all' or a list of mutation operators"); }
+
+        if (!gpHashMap.containsKey("iterationsPerBug")) { throw new Exception("'iterationsPerBug' property is missing in the config.yml 'gp' object "); }
+        if (!(gpHashMap.get("iterationsPerBug") instanceof Integer)) { throw new Exception("'iterationsPerBug' property must be an integer"); }
 
         generations = (int) gpHashMap.get("generations");
         populationSize = (int) gpHashMap.get("populationSize");
         mutationRate = (double) gpHashMap.get("mutationRate");
+        iterationsPerBug = (int) gpHashMap.get("iterationsPerBug");
 
         // Ensure constraints of properties are correct
         if (generations < 10 || generations > 10_000) { throw new Exception("'generations' property must be between 10 and 10,000"); }
         if (populationSize < 10 || populationSize > 10_000) { throw new Exception("'populationSize' property must be between 10 and 10,000"); }
         if (mutationRate < 0.0 || mutationRate > 1.0) { throw new Exception("'mutationRate' property must be between 0 and 1"); }
         if (gpHashMap.get("mutationOperators") instanceof String && !((String) gpHashMap.get("mutationOperators")).toLowerCase().trim().equals("all")) { throw new Exception("'mutationOperators' property is not valid as the String value does not equal 'all'"); }
+        if (iterationsPerBug < 1 || iterationsPerBug > 20) { throw new Exception("'iterationsPerBug' property must be between 1 and 20"); }
 
         // Further mutation operator parsing
         if (gpHashMap.get("mutationOperators") instanceof String) {
@@ -67,7 +73,7 @@ public class Gp {
             if(fileName.equals("AbstractMutationOperator.java") || !fileName.endsWith(".java")) { continue; }
 
             String mutationOperatorName = fileName.substring(0, fileName.lastIndexOf('.'));
-            Class<?> c = Class.forName("GP.MutationOperators." + mutationOperatorName);
+            Class<?> c = Class.forName("main.java.GP.MutationOperators." + mutationOperatorName);
 
             if(!c.getSuperclass().getSimpleName().equals("AbstractMutationOperator")) { throw new ClassNotFoundException(mutationOperatorName + " is not a subclass of AbstractMutationOperator.class"); }
 
@@ -83,7 +89,7 @@ public class Gp {
     public void getSelectedMutationOperators(ArrayList<String> selectedOperators) throws Exception {
         for (String mutationOperator : selectedOperators) {
             Class<?> c;
-            try { c = Class.forName("GP.MutationOperators." + mutationOperator); }
+            try { c = Class.forName("main.java.GP.MutationOperators." + mutationOperator); }
             catch (ClassNotFoundException ex) { throw new Exception("Class '" + mutationOperator + "' could not be found, make sure the mutation operator exists"); }
 
             // If the superclass is not the abstract MutationOperator class

@@ -1,8 +1,8 @@
-package Util;
+package main.java.Util;
 
-import YAMLParser.Defects4J;
-import YAMLParser.Gp;
-import YAMLParser.Output;
+import main.java.YAMLParser.Defects4J;
+import main.java.YAMLParser.Gp;
+import main.java.YAMLParser.Output;
 import org.yaml.snakeyaml.Yaml;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -36,9 +36,9 @@ public class ParserRunner {
         if (!(gpObj instanceof LinkedHashMap)) { throw new Exception("'gp' property is not in the correct form"); }
         if (!(outputObj instanceof LinkedHashMap)) { throw new Exception("'output' property is not in the correct form"); }
         if (!(defects4jObj instanceof LinkedHashMap)) { throw new Exception("'defects4j' property is not in the correct form"); }
-
-        Gp gp = new Gp((LinkedHashMap<String, Object>) gpObj);
-        Output output = new Output((LinkedHashMap<String, Object>) outputObj);
-        Defects4J defects4j = new Defects4J((LinkedHashMap<String, Object>) defects4jObj);
+        
+        gp = new Gp((LinkedHashMap<String, Object>) gpObj);
+        output = new Output((LinkedHashMap<String, Object>) outputObj);
+        defects4j = new Defects4J((LinkedHashMap<String, Object>) defects4jObj);
     }
 }
