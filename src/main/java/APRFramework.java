@@ -1,5 +1,6 @@
 package main.java;
 
+import main.java.Util.GPRunner;
 import main.java.Util.ParserRunner;
 import main.java.Util.ProjectPaths;
 
@@ -11,5 +12,8 @@ public class APRFramework {
 
         // Get project paths
         ProjectPaths projectPaths = new ProjectPaths(parser.defects4j.selectedTestCases, parser.gp.iterationsPerBug, parser.gp.mutationOperators);
+
+        // Call GPRunner
+        GPRunner gp = new GPRunner();
     }
 }

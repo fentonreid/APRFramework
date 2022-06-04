@@ -8,14 +8,24 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public final class ShellProcessBuilder {
-
-    public static ArrayList<String> getStandardInput(String[] command) throws Exception {
-        Process runningProcess;
+    public static Process runCommand(String[] command) throws Exception {
         try {
             ProcessBuilder ps = new ProcessBuilder(command);
             ps.directory(new File("defects4j/framework/bin/"));
 
-            runningProcess = ps.start();
+            return ps.start();
+
+        } catch (NullPointerException | IndexOutOfBoundsException ex) {
+            throw new Exception("The command passed is empty or contains null, consult the defects4j github examples for valid command uses");
+        } catch (IOException ex) {
+            throw new Exception("An input/output error has occurred " + ex);
+        }
+    }
+
+    public static ArrayList<String> getStandardInput(String[] command) throws Exception {
+        try {
+            Process runningProcess = ShellProcessBuilder.runCommand(command);
+
             BufferedReader standardInput = new BufferedReader(new InputStreamReader(runningProcess.getInputStream()));
             ArrayList<String> result = new ArrayList<>();
 
@@ -28,10 +38,6 @@ public final class ShellProcessBuilder {
             if (result.size() > 0) { return result; }
             throw new Exception();
 
-        } catch (NullPointerException | IndexOutOfBoundsException ex) {
-            throw new Exception("The command passed is empty or contains null, consult the defects4j github examples for valid command uses");
-        } catch (IOException ex) {
-            throw new Exception("An input/output error has occurred " + ex);
         } catch (Exception ex) {
             throw new Exception("Command '" + Arrays.toString(command) + "' failed no standard input was recorded");
         }
