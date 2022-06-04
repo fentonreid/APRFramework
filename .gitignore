@@ -12,3 +12,6 @@ out/**
 # Defects4j folder
 defects4j/**
 defects4j 
+
+# DS Store
+.DS_Store
