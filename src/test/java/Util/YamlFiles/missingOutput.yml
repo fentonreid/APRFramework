@@ -1,0 +1,13 @@
+gp:
+  generations: 1
+  populationSize: 1
+  mutationRate: 1
+  mutationOperators: all
+  iterationsPerBug: 1
+  numberOfThreads: 1
+
+defects4j:
+  testCaseSelection:
+    method: identifier
+    selection:
+      Lang: [1]

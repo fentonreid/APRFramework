@@ -1,6 +1,9 @@
 package main.java.YAMLParser;
 
+import com.github.javaparser.ast.CompilationUnit;
+
 import java.io.File;
+import java.io.FileFilter;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -12,6 +15,8 @@ public class Gp {
     public double mutationRate;
     public ArrayList<String> mutationOperators = new ArrayList<>();
     public int iterationsPerBug;
+
+    public int numberOfThreads;
 
     public Gp(LinkedHashMap<String, Object> gpHashMap) throws Exception {
         parse(gpHashMap);
@@ -25,7 +30,7 @@ public class Gp {
         if (!(gpHashMap.get("populationSize") instanceof Integer)) { throw new Exception("'populationSize' property must be an integer"); }
 
         if (!gpHashMap.containsKey("mutationRate")) { throw new Exception("'mutationRate' property is missing in the config.yml 'gp' object "); }
-        if (!(gpHashMap.get("mutationRate") instanceof Double)) { throw new Exception("'mutationRate' property must be a double"); }
+        if (!(gpHashMap.get("mutationRate") instanceof Double) && !(gpHashMap.get("mutationRate") instanceof Integer)) { throw new Exception("'mutationRate' property must be a double"); }
 
         if (!gpHashMap.containsKey("mutationOperators")) { throw new Exception("'mutationOperators' property is missing in the config.yml 'gp' object "); }
         if (!(gpHashMap.get("mutationOperators") instanceof String) && !(gpHashMap.get("mutationOperators") instanceof ArrayList)) { throw new Exception("'mutationOperators' property must be a String with the value of 'all' or a list of mutation operators"); }
@@ -33,17 +38,27 @@ public class Gp {
         if (!gpHashMap.containsKey("iterationsPerBug")) { throw new Exception("'iterationsPerBug' property is missing in the config.yml 'gp' object "); }
         if (!(gpHashMap.get("iterationsPerBug") instanceof Integer)) { throw new Exception("'iterationsPerBug' property must be an integer"); }
 
+        if (!gpHashMap.containsKey("numberOfThreads")) { throw new Exception("'numberOfThreads' property is missing in the config.yml 'gp' object "); }
+        if (!(gpHashMap.get("numberOfThreads") instanceof Integer)) { throw new Exception("'numberOfThreads' property must be an integer"); }
+
         generations = (int) gpHashMap.get("generations");
         populationSize = (int) gpHashMap.get("populationSize");
-        mutationRate = (double) gpHashMap.get("mutationRate");
+
+        if (gpHashMap.get("mutationRate") instanceof Integer) { mutationRate = (int) gpHashMap.get("mutationRate") * 1.0; }
+        else { mutationRate = (Double) gpHashMap.get("mutationRate"); }
+
         iterationsPerBug = (int) gpHashMap.get("iterationsPerBug");
+        numberOfThreads = (int) gpHashMap.get("numberOfThreads");
 
         // Ensure constraints of properties are correct
-        if (generations < 10 || generations > 10_000) { throw new Exception("'generations' property must be between 10 and 10,000"); }
-        if (populationSize < 10 || populationSize > 10_000) { throw new Exception("'populationSize' property must be between 10 and 10,000"); }
-        if (mutationRate < 0.0 || mutationRate > 1.0) { throw new Exception("'mutationRate' property must be between 0 and 1"); }
+        if (generations < 1 || generations > 1_000) { throw new Exception("'generations' property must be between 1 and 1000"); }
+        if (populationSize < 1 || populationSize > 1_000) { throw new Exception("'populationSize' property must be between 1 and 1000"); }
+        if (mutationRate < 0 || mutationRate > 1) { throw new Exception("'mutationRate' property must be between 0 and 1"); }
         if (gpHashMap.get("mutationOperators") instanceof String && !((String) gpHashMap.get("mutationOperators")).toLowerCase().trim().equals("all")) { throw new Exception("'mutationOperators' property is not valid as the String value does not equal 'all'"); }
         if (iterationsPerBug < 1 || iterationsPerBug > 20) { throw new Exception("'iterationsPerBug' property must be between 1 and 20"); }
+        if (numberOfThreads < 1 || numberOfThreads > 36) { throw new Exception("'numberOfThreads' property must be between 1 and 36"); }
+        if (populationSize < numberOfThreads) { throw new Exception("'numberOfThreads' property must be smaller than the population size"); }
+        if (populationSize % numberOfThreads != 0) { throw new Exception("'populationSize' property must be divisible by the number of threads"); }
 
         // Further mutation operator parsing
         if (gpHashMap.get("mutationOperators") instanceof String) {
@@ -63,19 +78,19 @@ public class Gp {
     public void getAllMutationOperators() throws Exception {
         // Get all class files in GP/MutationOperators directory
         String mutationOperatorDirectory = "src/main/java/GP/MutationOperators";
-        File[] mutationOperatorClasses = new File(Paths.get(mutationOperatorDirectory).toAbsolutePath().toString()).listFiles();
+        File[] mutationOperatorClasses = new File(Paths.get(mutationOperatorDirectory).toAbsolutePath().toString()).listFiles(f -> f.getName().endsWith("java"));
 
         if (mutationOperatorClasses == null) { throw new Exception("No mutation operators could be found in the project"); }
 
         for (File file : mutationOperatorClasses) {
             String fileName = file.getName();
 
-            if(fileName.equals("AbstractMutationOperator.java") || !fileName.endsWith(".java")) { continue; }
-
             String mutationOperatorName = fileName.substring(0, fileName.lastIndexOf('.'));
             Class<?> c = Class.forName("main.java.GP.MutationOperators." + mutationOperatorName);
 
-            if(!c.getSuperclass().getSimpleName().equals("AbstractMutationOperator")) { throw new ClassNotFoundException(mutationOperatorName + " is not a subclass of AbstractMutationOperator.class"); }
+            // Ensure the mutation operates implements the mutate method
+            try { c.getMethod("mutate", CompilationUnit.class); }
+            catch (NoSuchMethodException ex) { throw new Exception(mutationOperatorName + " does not implement a mutate method"); }
 
             mutationOperators.add(mutationOperatorName);
         }
@@ -92,8 +107,9 @@ public class Gp {
             try { c = Class.forName("main.java.GP.MutationOperators." + mutationOperator); }
             catch (ClassNotFoundException ex) { throw new Exception("Class '" + mutationOperator + "' could not be found, make sure the mutation operator exists"); }
 
-            // If the superclass is not the abstract MutationOperator class
-            if (!c.getSuperclass().getSimpleName().equals("AbstractMutationOperator")) { throw new Exception(mutationOperator + " is not a subclass of AbstractMutationOperator.class"); }
+            // Ensure the mutation operates implements the mutate method
+            try { c.getMethod("mutate", CompilationUnit.class); }
+            catch (NoSuchMethodException ex) { throw new Exception(mutationOperator + " does not implement a mutate method"); }
 
             mutationOperators.add(mutationOperator);
         }

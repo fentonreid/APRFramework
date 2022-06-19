@@ -1,67 +1,65 @@
-FROM ubuntu:20.04
+FROM ubuntu:20.04 
 
-#############################################################################
-# Requirements
-#############################################################################
-
-RUN \
-  apt-get update -y && \
-  apt-get install software-properties-common -y && \
-  apt-get update -y && \
-  apt-get install -y openjdk-8-jdk \
-                git \
-                build-essential \
-				subversion \
-				perl \
-				curl \
-				unzip \
-				cpanminus \
-				make \
-                && \
-  rm -rf /var/lib/apt/lists/*
-
-# Java version
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
-
-#############################################################################
-# Setup APRFramework
-#############################################################################
-
-# ----------- Step 1. Copy APRFramework from host directory into /APRFramework container directory --------------
-WORKDIR /APRFramework
-COPY . .
-
-# ----------- Step 2. Add the SnakeYAML version 1.30 as an external jar file --------------
-RUN curl https://repo1.maven.org/maven2/org/yaml/snakeyaml/1.30/snakeyaml-1.30.jar -o /APRFramework/snakeyaml-1.30.jar
+# Install dependencies
+RUN apt-get update -y && \
+    apt-get install software-properties-common -y && \
+    apt-get update -y && \
+    apt-get install -y openjdk-8-jdk \
+            git \
+            build-essential \
+            subversion \
+            perl \
+            curl \
+            unzip \
+            cpanminus \
+            make \
+            wget && \
+    rm -rf /var/lib/apt/lists/*
 
 #############################################################################
 # Setup Defects4J
 #############################################################################
 
-# Timezone
-ENV TZ=America/Los_Angeles
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# Setup Defects4j environment variables
+ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 \
+    TZ=America/Los_Angeles \
+    PATH="defects4j/framework/bin:${PATH}" 
 
-# ----------- Step 1. Clone defects4j from Github --------------
-WORKDIR /APRFramework
+# Setup Defects4J dependencies
+WORKDIR /
 RUN git clone https://github.com/rjust/defects4j.git defects4j
 
-# ----------- Step 2. Initialize Defects4J ---------------------
-WORKDIR /APRFramework/defects4j
-RUN cpanm --installdeps .
-RUN ./init.sh
-
-# ----------- Step 3. Add Defects4J's executables to PATH ------
-ENV PATH="/APRFramework/defects4j/framework/bin:${PATH}"  
-
+WORKDIR /defects4j
+RUN cpanm --installdeps . && \
+    ./init.sh && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+    
 #############################################################################
-# Setup Main.java add external jar + CMD
+# Maven setup
 #############################################################################
 
-# ----------- Step 1. Setup javac to compile current directory and add external snakeyaml jar --------------
-WORKDIR /APRFramework/src
-#RUN javac -cp ".:../snakeyaml-1.30.jar" APRFramework.java
+# Setup Maven environment variables
+ENV MAVEN_VERSION=3.8.6 \
+    MAVEN_HOME=/opt/maven \
+    M2_HOME=/opt/maven \
+    PATH=${M2_HOME}/bin:${PATH}
 
-# ----------- Step 2. Set Docker CMD where the Main.java class is run --------------
-#CMD ["java", "-cp", ".:../snakeyaml-1.30.jar", "APRFramework"]
-#--------------
+WORKDIR /
+RUN wget https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz -P /tmp/mvn && \
+    wget https://downloads.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz.sha512 -P /tmp/mvn/ && \
+    echo "$(cat /tmp/mvn/apache-maven-${MAVEN_VERSION}-bin.tar.gz.sha512) /tmp/mvn/apache-maven-${MAVEN_VERSION}-bin.tar.gz" | sha512sum -c && \
+    tar xzf /tmp/mvn/apache-maven-${MAVEN_VERSION}-bin.tar.gz -C /opt/ && \
+    ln -s /opt/apache-maven-${MAVEN_VERSION} /opt/maven && \
+    ln -s /opt/maven/bin/mvn /usr/local/bin && \
+    rm /tmp/mvn/apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
+    rm /tmp/mvn/apache-maven-${MAVEN_VERSION}-bin.tar.gz.sha512
+
+#############################################################################
+# APRFramework runner
+#############################################################################
+
+WORKDIR /APRFramework
+COPY . .
+
+# Install required dependencies
+#CMD mvn compile exec:java -Dexec.mainClass="main.java.APRFramework"

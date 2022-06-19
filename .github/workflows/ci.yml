@@ -22,11 +22,10 @@ jobs:
       - name: Build Dockerfile -> Development workflow
         run: docker build -t fentonreid/aprframework:$(git rev-parse --short "$GITHUB_SHA") .
 
-      #- name: Test APRFramework + Defects4j
-      #  run: | 
-      #      docker run fentonreid/aprframework:$(git rev-parse --short "$GITHUB_SHA") testDefects4j
-      #      docker run fentonreid/aprframework:$(git rev-parse --short "$GITHUB_SHA") testAPRFramework
-        
+      - name: Running tests for APRFramework
+        run: | 
+            docker run fentonreid/aprframework:$(git rev-parse --short "$GITHUB_SHA") mvn test
+            
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:

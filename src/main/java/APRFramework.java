@@ -1,19 +1,17 @@
 package main.java;
 
-import main.java.Util.GPRunner;
 import main.java.Util.ParserRunner;
-import main.java.Util.ProjectPaths;
+import main.java.GP.GP.GPRunner;
 
 public class APRFramework {
     public static void main(String[] args) throws Exception {
         // Call parserRunner
-        ParserRunner parser = new ParserRunner();
-        parser.main();
-
-        // Get project paths
-        ProjectPaths projectPaths = new ProjectPaths(parser.defects4j.selectedTestCases, parser.gp.iterationsPerBug, parser.gp.mutationOperators);
+        ParserRunner.main("config.yml");
 
         // Call GPRunner
-        GPRunner gp = new GPRunner();
+        GPRunner.main();
+        
+        // Run maven
+        // mvn compile exec:java -Dexec.mainClass="main.java.APRFramework"
     }
 }

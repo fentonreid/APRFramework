@@ -1,94 +1,64 @@
 package main.java.Util;
 
+import com.github.javaparser.ast.CompilationUnit;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
-import java.util.stream.IntStream;
+import java.util.ArrayList;
+import java.util.Properties;
 
 public final class ProjectPaths {
-    public static ProjectPath root;
-    public static ProjectPath src;
-    public static ArrayList<ProjectPath> identifiers = new ArrayList<>();
-    public static ArrayList<ProjectPath> bids = new ArrayList<>();
-    public static ArrayList<ProjectPath> iterations = new ArrayList<>();
-    public static ArrayList<ProjectPath> iteration = new ArrayList<>();
-    public static ArrayList<ProjectPath> mutation = new ArrayList<>();
-    public static ArrayList<ProjectPath> buggy = new ArrayList<>();
-    public static ArrayList<ProjectPath> fixed = new ArrayList<>();
-
-    public ProjectPaths(Map<String, HashSet<Integer>> identifiersToBugIds, int iterationFromConfig, ArrayList<String> mutationOperatorsFromConfig) {
-        root = new ProjectPath(Paths.get("/tmp"));
-        src = new ProjectPath(Paths.get(root + "/src"));
-
-        // Set /tmp/src/[identifiers] path
-        for (String identifier : identifiersToBugIds.keySet()) {
-            identifiers.add(new ProjectPath(Paths.get(src + "/" + identifier), identifier));
-
-            // Set /tmp/src/[identifiers]/BID_[bids] path
-            for (int id : identifiersToBugIds.get(identifier)) {
-                String bid = "BID_" + id;
-                bids.add(new ProjectPath(Paths.get(src + "/" + identifier + "/" + bid), identifier, String.valueOf(id)));
-
-                // Set /tmp/src/[identifiers]/BID_[bids]/Iterations path
-                iterations.add(new ProjectPath(Paths.get(src + "/" + identifier + "/" + bid + "/" + "Iterations"), identifier, String.valueOf(id)));
-
-                for (String mutationOperator : mutationOperatorsFromConfig) {
-                    for (int iterationCount : IntStream.rangeClosed(1, iterationFromConfig).toArray()) {
-                        // Set /tmp/src/[identifiers]/BID_[bids]/Iterations/_[iterations] path
-                        String iterationString = "_" + iterationCount;
-                        iteration.add(new ProjectPath(Paths.get(src + "/" + identifier + "/" + bid + "/" + "Iterations" + "/" + iterationString), identifier, String.valueOf(id), String.valueOf(iterationCount)));
-
-                        // Set /tmp/src/[identifiers]/BID_[bids]/Iterations/_[iterations]/[mutations] path
-                        mutation.add(new ProjectPath(Paths.get(src + "/" + identifier + "/" + bid + "/" + "Iterations" + "/" + iterationString + "/" + mutationOperator), identifier, String.valueOf(id), String.valueOf(iterationCount), mutationOperator));
-                    }
-                }
-            }
-        }
-    }
-
-    public static void copyFileToDestination(Path target, Path destination) throws Exception {
+    public static Path getBuggyProgramPath(String checkoutPath) throws Exception {
+        // Read the defects4j.build.properties file
+        Properties prop;
         try {
-            Files.copy(target, destination);
-        } catch (IOException ex) {
-            throw new Exception("Could not copy '" + target.toAbsolutePath() + "' to '" + destination.toAbsolutePath() + "'");
+            prop = new Properties();
+            prop.load(Files.newInputStream(Paths.get(checkoutPath + "/defects4j.build.properties")));
+        } catch (FileNotFoundException ex) { throw new Exception("'defects4j.build.properties' file not found suggesting '" + checkoutPath + "' was not fetched correctly"); }
+
+        String modifiedClass = prop.getProperty("d4j.classes.modified");
+        String relevantClasses = prop.getProperty("d4j.classes.relevant");
+        String pathToClasses = prop.getProperty("d4j.dir.src.classes");
+
+        // Ensure properties are not null, the modified class has a length of one, relevant bugs include the modified bug, srcPath + modifiedBug exists
+        if (modifiedClass == null || relevantClasses == null || pathToClasses == null) { throw new NullPointerException("Could not read 'defects4j.build.properties' file correctly"); }
+        if (modifiedClass.split(",").length > 1) { throw new IndexOutOfBoundsException("The modified class has a length greater than one and therefore is not compatible with this framework '" + modifiedClass + "' "); }
+        if (!(relevantClasses.contains(modifiedClass))) { throw new NullPointerException("The relevant classes does not include the modified class and therefore the bug cannot be fixed by changing " + modifiedClass); }
+
+        Path modifiedClassPath = Paths.get("/" + pathToClasses + "/" + modifiedClass.replaceAll("\\.", File.separator) + ".java");
+        if(!Files.exists(Paths.get(checkoutPath + modifiedClassPath))) { throw new Exception("Could not find the modified class path '" + modifiedClassPath +"'"); }
+
+        return modifiedClassPath;
+    }
+
+    public static Path getFixedProgramPath(String identifier, int bid) throws Exception {
+        Path patchPath = Paths.get("/defects4j/framework/projects/" + identifier + "/patches/" + bid + ".src.patch");
+        if(!Files.exists(patchPath)) { throw new IOException("Could not find the patch file at '" + patchPath + "'"); }
+
+        return patchPath;
+    }
+
+    public static void saveBugsToFileSystem(String identifier, int bid, String mutationOperatorName, ArrayList<CompilationUnit> patches) throws Exception {
+        File outputFile = new File("/output/" + identifier + "_" + bid + "/" + mutationOperatorName + "/");
+        if (!outputFile.mkdirs()) { throw new FileAlreadyExistsException("Failed to create '" + outputFile + "'"); }
+
+        int patchesSize = patches.size();
+        for (int i=0; i<patchesSize; i++) {
+            writeToFile(Paths.get(outputFile + "/" + (i+1)), patches.get(i).toString());
         }
     }
 
-    public static void createDirectory(Path directoryToCreate) throws Exception {
-        boolean created = directoryToCreate.toFile().mkdirs();
-
-        //if(!created) {
-        //    throw new Exception("Path: " + directoryToCreate + " could not be created");
-        //}
+    public static void writeToFile(Path writePath, String stringContents) throws Exception {
+        try { Files.write(writePath, stringContents.getBytes()); }
+        catch (IOException ex) { throw new Exception("Could not write to `" + writePath + "`"); }
     }
 
-    public static void createDirectories(ArrayList<Path> directoriesToCreate) throws Exception {
-        for (Path directoryToCreate : directoriesToCreate) {
-            boolean created = directoryToCreate.toFile().mkdirs();
-
-            //if(!created) {
-            //    throw new Exception("Path: " + directoryToCreate + " could not be created");
-            //}
-        }
-    }
-
-    public static class ProjectPath {
-        public Path path;
-        public Map<String, String> dynamicVariables = new HashMap<>();
-
-        public String toString() {
-            return path.toString();
-        }
-
-        public ProjectPath(Path path, String... args) {
-            this.path = path;
-
-            String[] variableNames = new String[]{"identifier", "bid", "iteration", "mutation"};
-            for (int i=0; i<args.length; i++) {
-                dynamicVariables.put(variableNames[i], args[i]);
-            }
-        }
+    public static void copyFile(Path fileToCopy, Path destination) throws Exception {
+        try { Files.copy(fileToCopy, destination); }
+        catch (IOException ex) { throw new Exception("Could not copy '" + fileToCopy + "' to '" + destination + " '"); }
     }
 }

@@ -1,17 +1,9 @@
 package main.java.GP.MutationOperators;
 
-public class MutationOperator3 extends AbstractMutationOperator{
-    public MutationOperator3() {
-        testHello();
-    }
+import com.github.javaparser.ast.CompilationUnit;
 
-    @Override
-    public void mutationImplementation() {
-        System.out.println("MUTATION IMPLEMENTATION");
-    }
-
-    @Override
-    public void testHello() {
-
+public final class MutationOperator3 {
+    public static CompilationUnit mutate(CompilationUnit program) {
+        return program.clone();
     }
 }
