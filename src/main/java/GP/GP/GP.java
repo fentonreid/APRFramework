@@ -1,11 +1,15 @@
 package main.java.GP.GP;
 
+import Util.CSVOutput;
 import com.github.javaparser.ast.CompilationUnit;
 import main.java.GP.GP.GPThread;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import main.java.Util.ParserRunner;
+import main.java.Util.ProjectPaths;
+import main.java.Util.ShellProcessBuilder;
 
 public final class GP {
     String programPath;
@@ -52,15 +56,11 @@ public final class GP {
     }
 
     public ArrayList<CompilationUnit> main() throws Exception {
-
-        System.out.println("STARTING???");
         initialisePopulation();
         ArrayList<CompilationUnit> patches = new ArrayList<>();
 
         int generation = 0;
         while (generation < generations) {
-            long start = System.nanoTime();
-
             ArrayList<GPThread> threads = new ArrayList<>();
 
             int chunkSize = populationSize/ParserRunner.gp.numberOfThreads;
@@ -85,12 +85,21 @@ public final class GP {
             if (localMaxFitness > fitnessOfFittestProgram) {
                 fittestProgram = population.get(fitnessResults.indexOf(localMaxFitness));
                 fitnessOfFittestProgram = localMaxFitness;
-                //if (fitnessOfFittestProgram == numberOfTestCases) {
-                //    System.out.println("Fix was found ");
-                //    patches.add(fittestProgram);
+                if (fitnessOfFittestProgram == numberOfTestCases) {
+                    System.out.println("Fix was found ");
 
-//                    // TODO: Need to think about multiple patches being found and how to handle!!
-  //              }
+                    // Check to make sure all test cases are passed
+                    ProjectPaths.writeToFile(Paths.get(buggyProgramPath), fittestProgram.toString());
+                    ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath});
+
+                    ArrayList<String> testResults = main.java.Util.ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "test", "-w", programPath});
+                    if (Character.getNumericValue(testResults.get(0).charAt(testResults.get(0).length() - 1)) != 0) { CSVOutput.passesAllTests += "Patch " + patches.size() + "fails"; }
+                    
+                    patches.add(fittestProgram);
+
+                    // TODO: Need to think about multiple patches being found and how to handle!!
+                    //
+                }
             }
 
             //System.out.println("GENERATION: " + generation + " :: highest fitness value of " + fitnessOfFittestProgram + "/" + numberOfTestCases);
@@ -101,23 +110,12 @@ public final class GP {
             //    return patches;
             //}
 
-            long startMut = System.nanoTime();
-
             // Apply mutation based on probability
             for (int i=0; i<populationSize; i++) {
                 if (Math.random() <= mutationRate) {
                     population.set(i, applyMutation());
                 }
             }
-            long endMut = System.nanoTime();
-
-            System.out.println("\n\n");
-            System.out.printf("%.2f", ((endMut - startMut) / 1_000_000_000.0));
-            System.out.print("Time taken to mutate \n");
-
-            long end = System.nanoTime();
-            System.out.printf("%.2f", ((end - start) / 1_000_000_000.0));
-            System.out.print(" Time for one generation\n");
 
             generation++;
         }

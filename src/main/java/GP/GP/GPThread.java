@@ -24,6 +24,8 @@ public final class GPThread extends Thread {
         this.programPath = programPath + gpThreadName;
         this.buggyProgramPath = this.programPath + buggyProgramPath;
 
+        System.out.println(buggyProgramPath);
+        
         fitnessResults = new ArrayList<>();
     }
 
