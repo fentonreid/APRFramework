@@ -1,9 +1,8 @@
-package test.java.Util;
+package Util;
 
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import main.java.Util.ParserRunner;
 import java.io.IOException;
 
 public class TestParserRunner {

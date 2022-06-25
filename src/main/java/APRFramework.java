@@ -1,8 +1,7 @@
-package main.java;
-
-import Util.CSVOutput;
-import main.java.Util.ParserRunner;
-import main.java.GP.GP.GPRunner;
+import Util.Javadoc;
+import Util.ValidDefectsPatches;
+import Util.ParserRunner;
+import GP.GP.GPRunner;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -16,10 +15,21 @@ public class APRFramework {
         // Call parserRunner
         ParserRunner.main("config.yml");
 
+        // Call Javadoc
+        System.out.println("JAVADOC??");
+        if (ParserRunner.output.javadoc) { Javadoc.main(); }
+
+        // Call PatchViewer
+        System.out.println("PATCHES?");
+        if (ParserRunner.output.patches) { ValidDefectsPatches.main(); }
+
         // Call GPRunner
-        GPRunner.main();
-        
+        if (ParserRunner.output.gp) { GPRunner.main(); }
+
+        // RUN IT
+        // docker run -it -v $(pwd)/APRFramework:/APRFramework/  dev
+
         // Run maven
-        // mvn compile exec:java -Dexec.mainClass="main.java.APRFramework"
+        // mvn compile exec:java -Dexec.mainClass="APRFramework"
     }
 }

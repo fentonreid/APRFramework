@@ -1,4 +1,4 @@
-package main.java.GP.MutationOperators;
+package GP.MutationOperators;
 
 import com.github.javaparser.ast.CompilationUnit;
 

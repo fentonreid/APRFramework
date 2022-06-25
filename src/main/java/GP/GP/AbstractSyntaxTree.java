@@ -1,4 +1,4 @@
-package main.java.GP.GP;
+package GP.GP;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;

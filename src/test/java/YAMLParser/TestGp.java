@@ -1,11 +1,9 @@
-package test.java.YAMLParser;
+package YAMLParser;
 
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import main.java.YAMLParser.Gp;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;

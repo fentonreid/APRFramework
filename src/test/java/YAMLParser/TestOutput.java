@@ -1,12 +1,10 @@
-package test.java.YAMLParser;
+package YAMLParser;
 
+import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import java.util.LinkedHashMap;
-import main.java.YAMLParser.Output;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class TestOutput {
     public LinkedHashMap<String, Object> outputHashMap;
@@ -15,6 +13,8 @@ public class TestOutput {
     public void reinitialise() {
         outputHashMap = new LinkedHashMap<>();
         outputHashMap.put("csv", "summary");
+        outputHashMap.put("javadoc", true);
+        outputHashMap.put("patches", true);
     }
 
     @Test
@@ -26,6 +26,30 @@ public class TestOutput {
         assertThrows(Exception.class, () -> new Output(outputHashMap));
 
         outputHashMap.put("csv", 10); // Throws is not of type String
+        assertThrows(Exception.class, () -> new Output(outputHashMap));
+    }
+
+    @Test
+    @DisplayName("Javadoc")
+    public void testJavadoc() throws Exception {
+        assertEquals(new Output(outputHashMap).javadoc, true); // Assert property was assigned
+
+        outputHashMap.remove("javadoc"); // Do not throw when property does not exist
+        assertDoesNotThrow(() -> new Output(outputHashMap));
+
+        outputHashMap.put("javadoc", "true"); // Throws if not of type Boolean
+        assertThrows(Exception.class, () -> new Output(outputHashMap));
+    }
+
+    @Test
+    @DisplayName("Patches")
+    public void testPatches() throws Exception {
+        assertEquals(new Output(outputHashMap).patches, true); // Assert property was assigned
+
+        outputHashMap.remove("patches"); // Do not throw when property does not exist
+        assertDoesNotThrow(() -> new Output(outputHashMap));
+
+        outputHashMap.put("patches", "true"); // Throws is not of type Boolean
         assertThrows(Exception.class, () -> new Output(outputHashMap));
     }
 }

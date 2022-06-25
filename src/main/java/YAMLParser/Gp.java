@@ -1,9 +1,7 @@
-package main.java.YAMLParser;
+package YAMLParser;
 
 import com.github.javaparser.ast.CompilationUnit;
-
 import java.io.File;
-import java.io.FileFilter;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -86,7 +84,7 @@ public class Gp {
             String fileName = file.getName();
 
             String mutationOperatorName = fileName.substring(0, fileName.lastIndexOf('.'));
-            Class<?> c = Class.forName("main.java.GP.MutationOperators." + mutationOperatorName);
+            Class<?> c = Class.forName("GP.MutationOperators." + mutationOperatorName);
 
             // Ensure the mutation operates implements the mutate method
             try { c.getMethod("mutate", CompilationUnit.class); }
@@ -104,7 +102,7 @@ public class Gp {
     public void getSelectedMutationOperators(ArrayList<String> selectedOperators) throws Exception {
         for (String mutationOperator : selectedOperators) {
             Class<?> c;
-            try { c = Class.forName("main.java.GP.MutationOperators." + mutationOperator); }
+            try { c = Class.forName("GP.MutationOperators." + mutationOperator); }
             catch (ClassNotFoundException ex) { throw new Exception("Class '" + mutationOperator + "' could not be found, make sure the mutation operator exists"); }
 
             // Ensure the mutation operates implements the mutate method

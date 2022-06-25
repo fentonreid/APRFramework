@@ -1,4 +1,4 @@
-package main.java.Util;
+package Util;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -22,9 +22,24 @@ public final class ShellProcessBuilder {
         }
     }
 
+    public static Process runCommand(String[] command, File workingDirectory) throws Exception {
+        try {
+            ProcessBuilder ps = new ProcessBuilder(command);
+            ps.directory(workingDirectory);
+
+            return ps.start();
+
+        } catch (NullPointerException | IndexOutOfBoundsException ex) {
+            throw new Exception("The command passed is empty or contains null, consult the defects4j github examples for valid command user or man pages is using a bash command");
+        } catch (IOException ex) {
+            throw new Exception("An input/output error has occurred " + ex);
+        }
+    }
+
     public static ArrayList<String> getStandardInput(String[] command) throws Exception {
         try {
             Process runningProcess = ShellProcessBuilder.runCommand(command);
+            runningProcess.waitFor();
 
             BufferedReader standardInput = new BufferedReader(new InputStreamReader(runningProcess.getInputStream()));
             ArrayList<String> result = new ArrayList<>();

@@ -1,4 +1,4 @@
-package main.java.Util;
+package Util;
 
 import com.github.javaparser.ast.CompilationUnit;
 import java.io.File;
@@ -42,6 +42,13 @@ public final class ProjectPaths {
         return patchPath;
     }
 
+    public static Path getFixedTestPath(String identifier, int bid) throws Exception {
+        Path patchPath = Paths.get("/defects4j/framework/projects/" + identifier + "/patches/" + bid + ".test.patch");
+        if(!Files.exists(patchPath)) { throw new IOException("Could not find the patch file at '" + patchPath + "'"); }
+
+        return patchPath;
+    }
+
     public static void saveBugsToFileSystem(String identifier, int bid, String mutationOperatorName, ArrayList<CompilationUnit> patches) throws Exception {
         File outputFile = new File("/output/" + identifier + "_" + bid + "/" + mutationOperatorName + "/");
         if (!outputFile.mkdirs()) { throw new FileAlreadyExistsException("Failed to create '" + outputFile + "'"); }
@@ -59,6 +66,6 @@ public final class ProjectPaths {
 
     public static void copyFile(Path fileToCopy, Path destination) throws Exception {
         try { Files.copy(fileToCopy, destination); }
-        catch (IOException ex) { throw new Exception("Could not copy '" + fileToCopy + "' to '" + destination + " '"); }
+        catch (IOException ex) { throw new Exception("Could not copy '" + fileToCopy + "' to '" + destination + " '" + ex); }
     }
 }

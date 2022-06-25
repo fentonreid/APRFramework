@@ -1,10 +1,9 @@
-package main.java.GP.GP;
+package GP.GP;
 
 import com.github.javaparser.ast.CompilationUnit;
-import main.java.Util.ShellProcessBuilder;
-import main.java.Util.ProjectPaths;
+import Util.ShellProcessBuilder;
+import Util.ProjectPaths;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
@@ -38,14 +37,8 @@ public final class GPThread extends Thread {
                 ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath});
 
                 // Defects4j run tests on program
-                long start = System.nanoTime();
                 ArrayList<String> testResults = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "test", "-r", "-w", programPath});
-                long end = System.nanoTime();
 
-                //System.out.println("\n\n");
-                //System.out.printf("%.2f", ((end - start) / 1_000_000_000.0));
-                //System.out.print("Test TIME\n");
-                
                 int failedTests = Character.getNumericValue(testResults.get(0).charAt(testResults.get(0).length() - 1));
                 fitnessResults.add(numberOfTestCases - failedTests);
             }

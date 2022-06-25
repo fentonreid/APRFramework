@@ -1,10 +1,9 @@
-package main.java.Util;
+package Util;
 
-import main.java.YAMLParser.Defects4J;
-import main.java.YAMLParser.Gp;
-import main.java.YAMLParser.Output;
+import YAMLParser.Defects4J;
+import YAMLParser.Gp;
+import YAMLParser.Output;
 import org.yaml.snakeyaml.Yaml;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;

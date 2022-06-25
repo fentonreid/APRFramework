@@ -1,4 +1,4 @@
-package test.java.Util;
+package Util;
 
 import static org.junit.jupiter.api.Assertions.*;
 import com.github.javaparser.ast.CompilationUnit;
@@ -10,13 +10,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.*;
 import java.util.ArrayList;
-import main.java.Util.ProjectPaths;
 
 public class TestProjectPaths {
     final Path checkoutPath = Paths.get("/APRFramework/src/test/java/Util/Lang_1_test");
 
     public void reinitialise() throws Exception {
-        Process runningProcess = main.java.Util.ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", "Lang", "-v", 1 + "b", "-w", checkoutPath.toString()});
+        Process runningProcess = ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", "Lang", "-v", 1 + "b", "-w", checkoutPath.toString()});
         if (new InputStreamReader(runningProcess.getInputStream()).read() != -1) { throw new Exception("Error when trying to checkout '" + "Lang" + "' with a bug id of '" + 1); }
     }
 

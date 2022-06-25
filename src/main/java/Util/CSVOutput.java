@@ -5,8 +5,7 @@ import java.io.FileWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import main.java.Util.ParserRunner;
-import main.java.YAMLParser.Gp;
+import YAMLParser.Gp;
 
 public final class CSVOutput {
     public static ArrayList<String[]> csvData;

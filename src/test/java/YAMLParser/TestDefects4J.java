@@ -1,10 +1,9 @@
-package test.java.YAMLParser;
+package YAMLParser;
 
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import main.java.YAMLParser.Defects4J;
-import main.java.Util.ShellProcessBuilder;
+import Util.ShellProcessBuilder;
 import java.security.InvalidParameterException;
 import java.util.*;
 

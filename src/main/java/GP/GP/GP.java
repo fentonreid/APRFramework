@@ -1,15 +1,15 @@
-package main.java.GP.GP;
+package GP.GP;
 
 import Util.CSVOutput;
 import com.github.javaparser.ast.CompilationUnit;
-import main.java.GP.GP.GPThread;
+import GP.GP.GPThread;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import main.java.Util.ParserRunner;
-import main.java.Util.ProjectPaths;
-import main.java.Util.ShellProcessBuilder;
+import Util.ParserRunner;
+import Util.ProjectPaths;
+import Util.ShellProcessBuilder;
 
 public final class GP {
     String programPath;
@@ -92,7 +92,7 @@ public final class GP {
                     ProjectPaths.writeToFile(Paths.get(buggyProgramPath), fittestProgram.toString());
                     ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath});
 
-                    ArrayList<String> testResults = main.java.Util.ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "test", "-w", programPath});
+                    ArrayList<String> testResults = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "test", "-w", programPath});
                     if (Character.getNumericValue(testResults.get(0).charAt(testResults.get(0).length() - 1)) != 0) { CSVOutput.passesAllTests += "Patch " + patches.size() + "fails"; }
                     
                     patches.add(fittestProgram);

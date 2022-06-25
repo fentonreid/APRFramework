@@ -1,7 +1,6 @@
-package main.java.YAMLParser;
+package YAMLParser;
 
-import main.java.Util.ShellProcessBuilder;
-
+import Util.ShellProcessBuilder;
 import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.stream.IntStream;

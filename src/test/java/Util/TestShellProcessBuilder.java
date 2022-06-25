@@ -1,12 +1,9 @@
-package test.java.Util;
+package Util;
 
 import static org.junit.jupiter.api.Assertions.*;
-
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import main.java.Util.ShellProcessBuilder;
-
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;

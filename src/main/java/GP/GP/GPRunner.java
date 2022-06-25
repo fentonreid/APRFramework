@@ -1,14 +1,10 @@
-package main.java.GP.GP;
+package GP.GP;
 
 import Util.CSVOutput;
-import main.java.Util.ProjectPaths;
-import main.java.GP.GP.AbstractSyntaxTree;
-import main.java.GP.GP.GP;
+import Util.ProjectPaths;
 import com.github.javaparser.ast.CompilationUnit;
-import main.java.Util.ShellProcessBuilder;
+import Util.ShellProcessBuilder;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,7 +12,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
-import main.java.Util.ParserRunner;
+import Util.ParserRunner;
 import org.apache.commons.io.FileUtils;
 
 public final class GPRunner {
@@ -76,7 +72,7 @@ public final class GPRunner {
 
                     for (int i = 1; i <= ParserRunner.gp.iterationsPerBug; i++) {
                         long startIterationTime = System.nanoTime();
-                        ArrayList<CompilationUnit> currentIterationPatches = new GP(buggyAST, Class.forName("main.java.GP.MutationOperators." + mutationOperator), numberOfTestCases, checkoutFolderBase, buggyFilePath.toString()).main();
+                        ArrayList<CompilationUnit> currentIterationPatches = new GP(buggyAST, Class.forName("GP.MutationOperators." + mutationOperator), numberOfTestCases, checkoutFolderBase, buggyFilePath.toString()).main();
                         if(currentIterationPatches.size() > 1) { patches.addAll(currentIterationPatches); }
                         long endIterationTime = System.nanoTime();
 
