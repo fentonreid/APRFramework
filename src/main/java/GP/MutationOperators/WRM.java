@@ -1,140 +1,209 @@
 package GP.MutationOperators;
 
 import Util.GPHelpers;
+import com.github.javaparser.Position;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.*;
+import com.github.javaparser.resolution.declarations.ResolvedConstructorDeclaration;
+import com.github.javaparser.resolution.declarations.ResolvedDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
+
 import java.util.*;
 
 public final class WRM {
-    public static CompilationUnit mutate(CompilationUnit program) {
+    public static CompilationUnit mutate(CompilationUnit program) throws Exception {
         // Original methodDeclaration: List of overloaded methods with different parameters
-        Map<MethodCallExpr, List<ResolvedMethodDeclaration>> methodDeclarations = GetOverloadedMethods(program);
+        Map<Expression, List<ResolvedDeclaration>> overloadedExpressions = getOverloadedExpressions(program);
 
-        // Pick random MethodCallExpr from Map
-        MethodCallExpr mce = (MethodCallExpr) methodDeclarations.keySet().toArray()[new Random().nextInt(methodDeclarations.keySet().toArray().length)];
-        ResolvedMethodDeclaration rmce = mce.resolve();
+        // Ensure non-nullness then pick a random expression from the hashmap and a subsequent value from the list
+        if (overloadedExpressions.size() == 0) { throw new NullPointerException("No valid overload found for any methods or classes with respective method or object creation calls"); }
+        Expression randomExpression = (Expression) overloadedExpressions.keySet().toArray()[new Random().nextInt(overloadedExpressions.keySet().toArray().length)];
 
-        // Pick at random an overloaded method to convert
-        List<ResolvedMethodDeclaration> resolvedMethodDeclarations = methodDeclarations.get(mce);
-        ResolvedMethodDeclaration rmd = resolvedMethodDeclarations.get(GPHelpers.randomIndex(resolvedMethodDeclarations.size()));
-
-        // Get ResolvedMethodCallExpr types
-        List < String > rmceParams = new ArrayList<>();
-        for (int i = 0; i < rmce.getNumberOfParams(); i++) {
-            rmceParams.add(rmce.getParam(i).getType().describe());
-        }
-
-        // Get overloaded type method
-        List<String> rmdParams = new ArrayList<>();
-        for (int i = 0; i < rmd.getNumberOfParams(); i++) {
-            rmdParams.add(rmd.getParam(i).getType().describe());
-        }
-
-        // Clone the original mce and remove all arguments
-        MethodCallExpr modifiedMCE = mce.clone();
-        MethodCallExpr oldMCE = mce.clone();
+        ResolvedDeclaration randomOverload = overloadedExpressions.get(randomExpression).get(GPHelpers.randomIndex(overloadedExpressions.get(randomExpression).size()));
+        List<String> originalParams;
+        List<String> overloadedParams;
+        Expression originalNode;
         NodeList<Expression> modifiedArguments = new NodeList<>();
-        modifiedMCE.setArguments(modifiedArguments);
 
-        outer:
-        for (String param : rmdParams) {
-            // If param type is same as in the original then add it and remove from original mce
-            for (int i = 0; i < oldMCE.getArguments().size(); i++) {
-                // If parameter type was found in mce then add a new parameter to modifiedMCE and remove from the original mce
-                if (rmceParams.get(i).equals(param)) {
-                    modifiedArguments.add(oldMCE.getArgument(i));
-                    oldMCE.getArguments().remove(oldMCE.getArgument(i));
-                    continue outer;
-                }
-            }
-            // Try to find a variable, method call or object creation expression with same type
-            List<Expression> resolvedNodes = resolveType(program, param);
+        switch (randomExpression.getClass().getSimpleName()) {
+            case "MethodCallExpr":
+                // We are dealing with a ResolvedMethodDeclaration
+                ResolvedMethodDeclaration rmd = (ResolvedMethodDeclaration) randomOverload;
 
-            if (resolvedNodes.size() == 0) { throw new NullPointerException("Could not resolved any variable, method call or object creation expression with the required type of: '" + param + "'"); }
-            modifiedArguments.add(resolvedNodes.get(GPHelpers.randomIndex(resolvedNodes.size())));
+                // Get original and overloaded parameter types
+                originalParams = getMethodParams(randomExpression.asMethodCallExpr().resolve());
+                overloadedParams = getMethodParams(rmd);
+
+                // Clone the original method and remove all arguments
+                originalNode = randomExpression.asMethodCallExpr().clone();
+                break;
+            case "ObjectCreationExpr":
+                ResolvedConstructorDeclaration rcd = (ResolvedConstructorDeclaration) randomOverload;
+
+                // Get original and overloaded parameter types
+                originalParams = getConstructorParams(randomExpression.asObjectCreationExpr().resolve());
+                overloadedParams = getConstructorParams(rcd);
+
+                // Clone the original constructor and remove all arguments, cloning twice as original Constructor is also altered
+                originalNode = randomExpression.asObjectCreationExpr().clone();
+                break;
+            default:
+                throw new TypeNotPresentException("No valid expression was found", null);
         }
 
-        System.out.println("MODIFIED ARGUMENTS: " + modifiedArguments);
+        for (String param : overloadedParams) {
+            // If the original method contains the overloaded methods type then add to arguments
+            if (originalParams.contains(param)) {
+                int foundIndex = originalParams.indexOf(param);
+                if (randomExpression instanceof MethodCallExpr) {
+                    modifiedArguments.add(originalNode.asMethodCallExpr().getArgument(foundIndex));
+                    originalParams.remove(foundIndex);
+                    originalNode.asMethodCallExpr().getArgument(foundIndex).remove();
+
+                } else if (randomExpression instanceof ObjectCreationExpr) {
+                    modifiedArguments.add(originalNode.asObjectCreationExpr().getArgument(foundIndex));
+                    originalParams.remove(foundIndex);
+                    originalNode.asObjectCreationExpr().getArgument(foundIndex).remove();
+                }
+
+                // Try to find a variable, method call or object creation expression with same type
+            } else {
+                List<Expression> resolvedNodes = getExpressionsInSpecificClassAndMethod(randomExpression, param);
+                if (resolvedNodes.size() == 0) { throw new NullPointerException("Could not resolved any variable, method call or object creation expression with the required type of: '" + param + "'"); }
+                modifiedArguments.add(resolvedNodes.get(GPHelpers.randomIndex(resolvedNodes.size())));
+            }
+        }
 
         // Replace old mce with overloaded method
-        modifiedMCE.setArguments(modifiedArguments);
-        mce.replace(modifiedMCE);
+        if (randomExpression instanceof MethodCallExpr) {
+            randomExpression.asMethodCallExpr().setArguments(modifiedArguments);
+        } else if (randomExpression instanceof ObjectCreationExpr) {
+            randomExpression.asObjectCreationExpr().setArguments(modifiedArguments);
+        }
 
         System.out.println(program);
         return program.clone();
     }
 
-    public static List<Expression> resolveType(CompilationUnit cu, String resolvedType) {
+    public static Map<Expression, List<ResolvedDeclaration>> getOverloadedExpressions(CompilationUnit cu) {
+        Map<Expression, List<ResolvedDeclaration>> overloadedExpressions = new HashMap<>();
+
+        // We can have method call expressions and object creation e.g. person.getName() and new person();
+        overloadedExpressions.putAll(getOverloadedMethods(cu));
+        overloadedExpressions.putAll(getOverloadedConstructors(cu));
+
+        return overloadedExpressions;
+    }
+
+    public static Map<Expression, List<ResolvedDeclaration>> getOverloadedMethods(CompilationUnit cu) {
+        Map<Expression, List<ResolvedDeclaration>> methodDeclarations = new HashMap<>();
+
+        // We can have method call expressions and object creation e.g. person.getName() and new person();
+        List<MethodCallExpr> methodCallExprs = new ArrayList<>(cu.findAll(MethodCallExpr.class));
+
+        // Resolve method calls
+        for (MethodCallExpr expression : methodCallExprs) {
+            // Resolve method declaration and check for overloaded methods
+            ResolvedMethodDeclaration rmd = expression.resolve();
+            List<ResolvedDeclaration> overloadedMethods = new ArrayList<>();
+
+            // Get all method declarations that have the same: class name, method name and returnTypes that aren't the original method
+            cu.findAll(MethodDeclaration.class).forEach(md -> {
+                ResolvedMethodDeclaration overloadedRMD = md.resolve();
+                if (!(overloadedRMD.getQualifiedSignature().equals(rmd.getQualifiedSignature())) && overloadedRMD.getQualifiedName().equals(rmd.getQualifiedName()) && overloadedRMD.getReturnType().describe().equals(rmd.getReturnType().describe())) {
+                    overloadedMethods.add(overloadedRMD);
+                }
+            });
+
+            if (overloadedMethods.size() > 0) { methodDeclarations.put(expression, overloadedMethods); }
+        }
+
+        return methodDeclarations;
+    }
+
+    public static Map<Expression, List<ResolvedDeclaration>> getOverloadedConstructors(CompilationUnit cu) {
+        Map<Expression, List<ResolvedDeclaration>> validConstructors = new HashMap<>();
+
+        List<ObjectCreationExpr> objectCreationExprs = new ArrayList<>(cu.findAll(ObjectCreationExpr.class));
+
+        for (ObjectCreationExpr expression : objectCreationExprs) {
+            // Resolve object creation constructor and check for overloaded constructors
+            ResolvedConstructorDeclaration rcon = expression.resolve();
+            List<ResolvedDeclaration> overloadedConstructors = new ArrayList<>();
+
+            cu.getClassByName(rcon.getClassName()).ifPresent(i -> i.getConstructors().forEach(constructor -> {
+                // If the constructor signatures are different then an overloaded constructor has been identified
+                if (!(rcon.getQualifiedSignature().equals(constructor.resolve().getQualifiedSignature()))) {
+                    overloadedConstructors.add(constructor.resolve());
+                }
+            }));
+
+            if (overloadedConstructors.size() > 0) { validConstructors.put(expression, overloadedConstructors); }
+        }
+
+        return validConstructors;
+    }
+
+    public static List<Expression> getExpressionsInSpecificClassAndMethod(Expression expression, String resolvedType) {
         List<Expression> expressions = new ArrayList<>();
 
+        // Get all field variables
+        expression.findAncestor(ClassOrInterfaceDeclaration.class).get().findAll(FieldDeclaration.class).forEach(fd -> fd.getVariables().forEach(vd -> {
+            if (vd.resolve().getType().describe().equals(resolvedType)) {
+                expressions.add(vd.getNameAsExpression().clone());
+            }
+        }));
+
         // Get all method call expressions and check the return type-> person.getName()
-        cu.findAll(MethodCallExpr.class).forEach(mce -> {
-            System.out.println("METHODS: " + mce);
-            // If return type of method is of resolveType
-            if(mce.resolve().getReturnType().describe().equals(resolvedType)) {
+        expression.findAncestor(MethodDeclaration.class).get().findAll(MethodCallExpr.class).forEach(mce -> {
+            if (mce.resolve().getReturnType().describe().equals(resolvedType) && compareLineNumbers(mce.getBegin(), expression.getBegin())) {
                 expressions.add(mce.clone());
             }
         });
 
         // Add all variable declarators, in Java a type must be declared, e.g. String name = "Fenton";
-        cu.findAll(VariableDeclarator.class).forEach(vd -> {
-            if(vd.resolve().getType().describe().equals(resolvedType)) {
-                expressions.add(vd.getNameAsExpression().clone());
+        expression.findAncestor(MethodDeclaration.class).get().findAll(VariableDeclarator.class).forEach(md -> {
+            if (md.resolve().getType().describe().equals(resolvedType) && compareLineNumbers(md.getBegin(), expression.getBegin())) {
+                expressions.add(md.getNameAsExpression().clone());
             }
         });
 
         // Add all object creation expr, e.g. new Person("Fenton");
-        cu.findAll(ObjectCreationExpr.class).forEach(oce -> {
-            if(oce.resolve().getClassName().equals(resolvedType)) {
+        expression.findAncestor(MethodDeclaration.class).get().findAll(ObjectCreationExpr.class).forEach(oce -> {
+            if (oce.resolve().getClassName().equals(resolvedType) && compareLineNumbers(oce.getBegin(), expression.getBegin())) {
                 expressions.add(oce.clone());
             }
         });
 
-        // NOTE::
-        // For expressions:
-        //     int person = new Person("Fenton");
-        // Both person and new Person("Fenton") are added, this is intentional to allow for object creation to be passed into a variable without assignment
-
-        System.out.println(expressions);
         return expressions;
     }
 
-    public static Map<MethodCallExpr, List<ResolvedMethodDeclaration>> GetOverloadedMethods(CompilationUnit cu) {
-        Map<MethodCallExpr, List<ResolvedMethodDeclaration>> methodDeclarations = new HashMap<>();
+    public static boolean compareLineNumbers(Optional<Position> position, Optional<Position> nodeDeclarationPosition) {
+        if(!position.isPresent() || !nodeDeclarationPosition.isPresent()) { return false; }
 
-        // Add to a list all methodCalls
-        List<MethodCallExpr> methodCalls = new ArrayList<>(cu.findAll(MethodCallExpr.class));
+        return position.get().line < nodeDeclarationPosition.get().line;
+    }
 
-        // We go through each method call and look for a different one with same class name, method name and return type but different parameters
-        for (MethodCallExpr mce : methodCalls) {
-            ResolvedMethodDeclaration rmd = mce.resolve();
-            List<ResolvedMethodDeclaration> resolvedOverloadedMethods = new ArrayList<>();
-
-            String className = rmd.getClassName();
-            String methodName = rmd.getName();
-            String returnType = rmd.getReturnType().describe();
-            List<String> parameterTypes = new ArrayList<>();
-            for(int i=0; i<rmd.getNumberOfParams(); i++) {
-                parameterTypes.add(rmd.getParam(i).describeType());
-            }
-
-            // Get the method declaration that has the same className, methodName and returnTypes and numberOfParams is different
-            cu.findAll(MethodDeclaration.class).forEach(md -> {
-                ResolvedMethodDeclaration resolvedMethodDeclaration = md.resolve();
-                if (resolvedMethodDeclaration.getClassName().equals(className) && resolvedMethodDeclaration.getName().equals(methodName) && resolvedMethodDeclaration.getReturnType().describe().equals(returnType) && resolvedMethodDeclaration.getNumberOfParams() != parameterTypes.size()) {
-                    resolvedOverloadedMethods.add(md.resolve());
-                }
-            });
-
-            if (resolvedOverloadedMethods.size() > 0) { methodDeclarations.put(mce, resolvedOverloadedMethods); }
+    public static List<String> getMethodParams(ResolvedMethodDeclaration method) {
+        List <String> params = new ArrayList<>();
+        for (int i = 0; i < method.getNumberOfParams(); i++) {
+            params.add(method.getParam(i).getType().describe());
         }
 
-        if (methodDeclarations.size() == 0) { throw new NullPointerException("No valid method overload was found for the methods called in this program"); }
+        return params;
+    }
 
-        return methodDeclarations;
+    public static List<String> getConstructorParams(ResolvedConstructorDeclaration constructor) {
+        List <String> params = new ArrayList<>();
+        for (int i = 0; i < constructor.getNumberOfParams(); i++) {
+            params.add(constructor.getParam(i).getType().describe());
+        }
+
+        return params;
     }
 }

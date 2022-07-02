@@ -28,7 +28,6 @@ public final class BAR {
                 // Remove the given unary expression and get the expression within e.g. !(x > 5) -> (x > 5)
                 randomExpression.asUnaryExpr().replace(randomExpression.asUnaryExpr().getExpression());
                 break;
-
             case "BinaryExpr":
                 // 50/50 to either introduce a unary expression or switch operator
                 if (Math.random() < 0.5) {
@@ -39,12 +38,10 @@ public final class BAR {
                     randomExpression.replace(new UnaryExpr().setExpression(new EnclosedExpr(randomExpression.clone())).setOperator(unaryOperators[GPHelpers.randomIndex(unaryOperators.length)]));
                 }
                 break;
-
             case "BooleanLiteralExpr":
                 // Invert the given boolean literal value e.g. true -> false
                 randomExpression.asBooleanLiteralExpr().setValue(!randomExpression.asBooleanLiteralExpr().getValue());
                 break;
-            
             default:
                 throw new TypeNotPresentException("No valid expression was found", null);
         }

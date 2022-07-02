@@ -15,12 +15,12 @@ import java.nio.file.Paths;
 
 public class APRFramework {
     public static void main(String[] args) throws Exception {
-        CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("bar.java"));
-        
-        BAR.mutate(mutationAST);
+        CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("wrm.java"));
+
+        //BAR.mutate(mutationAST);
         //BER.mutate(mutationAST);
         //LRR.mutate(mutationAST);
-        //WRM.mutate(mutationAST);
+        WRM.mutate(mutationAST);
 
 
         // This keeps formatting the same, useful for diff comparisons of patch and fixed code...
@@ -30,8 +30,8 @@ public class APRFramework {
         // Ensure clean setup
         File outputFolder = new File("/output");
         if(outputFolder.exists()) { FileUtils.deleteDirectory(outputFolder); }
-
-        // Call parserRunner
+        
+        /*// Call parserRunner
         ParserRunner.main("config.yml");
 
         // Call Javadoc
@@ -43,7 +43,7 @@ public class APRFramework {
         if (ParserRunner.output.patches) { ValidDefectsPatches.main(); }
 
         // Call GPRunner
-        if (ParserRunner.output.gp) { GPRunner.main(); }
+        if (ParserRunner.output.gp) { GPRunner.main(); }*/
 
         // RUN IT
         // docker run -it -v $(pwd)/APRFramework:/APRFramework/  dev
