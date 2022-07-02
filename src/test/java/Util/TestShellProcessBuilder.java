@@ -33,7 +33,7 @@ public class TestShellProcessBuilder {
         ArrayList<String> testResults = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "test", "-r", "-w", checkoutPath.toString()});
         assertTrue(testResults.size() >= 1);
         assertTrue(testResults.get(0).contains("Failing tests"));
-
+        
         // Remove checkoutPath
         FileUtils.deleteDirectory(checkoutPath.toFile());
     }
