@@ -2,6 +2,7 @@ import GP.GP.AbstractSyntaxTree;
 import GP.GP.GPRunner;
 import GP.MutationOperators.BAR;
 //import GP.MutationOperators.BER;
+import GP.MutationOperators.BER;
 import GP.MutationOperators.LRR;
 import GP.MutationOperators.WRM;
 import Util.Javadoc;
@@ -15,12 +16,12 @@ import java.nio.file.Paths;
 
 public class APRFramework {
     public static void main(String[] args) throws Exception {
-        CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("wrm.java"));
+        CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("ber.java"));
 
         //BAR.mutate(mutationAST);
-        //BER.mutate(mutationAST);
+        BER.mutate(mutationAST);
         //LRR.mutate(mutationAST);
-        WRM.mutate(mutationAST);
+        //WRM.mutate(mutationAST);
 
 
         // This keeps formatting the same, useful for diff comparisons of patch and fixed code...
@@ -30,7 +31,7 @@ public class APRFramework {
         // Ensure clean setup
         File outputFolder = new File("/output");
         if(outputFolder.exists()) { FileUtils.deleteDirectory(outputFolder); }
-        
+
         /*// Call parserRunner
         ParserRunner.main("config.yml");
 

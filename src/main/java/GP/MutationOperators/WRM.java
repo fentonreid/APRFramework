@@ -12,7 +12,6 @@ import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.resolution.declarations.ResolvedConstructorDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
-
 import java.util.*;
 
 public final class WRM {
@@ -25,10 +24,11 @@ public final class WRM {
         Expression randomExpression = (Expression) overloadedExpressions.keySet().toArray()[new Random().nextInt(overloadedExpressions.keySet().toArray().length)];
 
         ResolvedDeclaration randomOverload = overloadedExpressions.get(randomExpression).get(GPHelpers.randomIndex(overloadedExpressions.get(randomExpression).size()));
+        NodeList<Expression> modifiedArguments = new NodeList<>();
+
         List<String> originalParams;
         List<String> overloadedParams;
         Expression originalNode;
-        NodeList<Expression> modifiedArguments = new NodeList<>();
 
         switch (randomExpression.getClass().getSimpleName()) {
             case "MethodCallExpr":
@@ -41,6 +41,25 @@ public final class WRM {
 
                 // Clone the original method and remove all arguments
                 originalNode = randomExpression.asMethodCallExpr().clone();
+
+                for (String param : overloadedParams) {
+                    // If the original method contains the overloaded methods type then add to arguments
+                    if (originalParams.contains(param)) {
+                        int foundIndex = originalParams.indexOf(param);
+                            modifiedArguments.add(originalNode.asMethodCallExpr().getArgument(foundIndex));
+                            originalParams.remove(foundIndex);
+                            originalNode.asMethodCallExpr().getArgument(foundIndex).remove();
+
+                    // Try to find a variable, method call or object creation expression with same type
+                    } else {
+                        List<Expression> resolvedNodes = getExpressionsInSpecificClassAndMethod(randomExpression, param);
+                        if (resolvedNodes.size() == 0) { throw new NullPointerException("Could not resolved any variable, method call or object creation expression with the required type of: '" + param + "'"); }
+                        modifiedArguments.add(resolvedNodes.get(GPHelpers.randomIndex(resolvedNodes.size())));
+                    }
+                }
+
+                // Replace old mce with overloaded method
+                randomExpression.asMethodCallExpr().setArguments(modifiedArguments);
                 break;
             case "ObjectCreationExpr":
                 ResolvedConstructorDeclaration rcd = (ResolvedConstructorDeclaration) randomOverload;
@@ -49,41 +68,30 @@ public final class WRM {
                 originalParams = getConstructorParams(randomExpression.asObjectCreationExpr().resolve());
                 overloadedParams = getConstructorParams(rcd);
 
-                // Clone the original constructor and remove all arguments, cloning twice as original Constructor is also altered
+                // Clone the original method and remove all arguments
                 originalNode = randomExpression.asObjectCreationExpr().clone();
+
+                for (String param : overloadedParams) {
+                    // If the original method contains the overloaded methods type then add to arguments
+                    if (originalParams.contains(param)) {
+                        int foundIndex = originalParams.indexOf(param);
+                        modifiedArguments.add(originalNode.asObjectCreationExpr().getArgument(foundIndex));
+                        originalParams.remove(foundIndex);
+                        originalNode.asObjectCreationExpr().getArgument(foundIndex).remove();
+
+                        // Try to find a variable, method call or object creation expression with same type
+                    } else {
+                        List<Expression> resolvedNodes = getExpressionsInSpecificClassAndMethod(randomExpression, param);
+                        if (resolvedNodes.size() == 0) { throw new NullPointerException("Could not resolved any variable, method call or object creation expression with the required type of: '" + param + "'"); }
+                        modifiedArguments.add(resolvedNodes.get(GPHelpers.randomIndex(resolvedNodes.size())));
+                    }
+                }
+
+                // Replace old mce with overloaded method
+                randomExpression.asObjectCreationExpr().setArguments(modifiedArguments);
                 break;
             default:
                 throw new TypeNotPresentException("No valid expression was found", null);
-        }
-
-        for (String param : overloadedParams) {
-            // If the original method contains the overloaded methods type then add to arguments
-            if (originalParams.contains(param)) {
-                int foundIndex = originalParams.indexOf(param);
-                if (randomExpression instanceof MethodCallExpr) {
-                    modifiedArguments.add(originalNode.asMethodCallExpr().getArgument(foundIndex));
-                    originalParams.remove(foundIndex);
-                    originalNode.asMethodCallExpr().getArgument(foundIndex).remove();
-
-                } else if (randomExpression instanceof ObjectCreationExpr) {
-                    modifiedArguments.add(originalNode.asObjectCreationExpr().getArgument(foundIndex));
-                    originalParams.remove(foundIndex);
-                    originalNode.asObjectCreationExpr().getArgument(foundIndex).remove();
-                }
-
-                // Try to find a variable, method call or object creation expression with same type
-            } else {
-                List<Expression> resolvedNodes = getExpressionsInSpecificClassAndMethod(randomExpression, param);
-                if (resolvedNodes.size() == 0) { throw new NullPointerException("Could not resolved any variable, method call or object creation expression with the required type of: '" + param + "'"); }
-                modifiedArguments.add(resolvedNodes.get(GPHelpers.randomIndex(resolvedNodes.size())));
-            }
-        }
-
-        // Replace old mce with overloaded method
-        if (randomExpression instanceof MethodCallExpr) {
-            randomExpression.asMethodCallExpr().setArguments(modifiedArguments);
-        } else if (randomExpression instanceof ObjectCreationExpr) {
-            randomExpression.asObjectCreationExpr().setArguments(modifiedArguments);
         }
 
         System.out.println(program);
