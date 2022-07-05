@@ -49,28 +49,43 @@ public final class SVM {
                 nodeFrom = getEnumDeclaration(nodeTo);
                 break;
         }
-        
+
+        /* Perform replacement */
+        nodeTo.replace(nodeFrom);
+
         /* Print and return */
         System.out.println(program);
         return program.clone();
     }
 
     private static Node getEnumDeclaration(Node nodeTo) {
+        // Find enum that matches the nodeTo type
+        // Then choose a random entry
 
         return null;
     }
 
     private static Node getObjectCreationExpr(Node nodeTo) {
+        // Look for object with required nodeTo type
+        // Get all constructors of that type and pick one randomly
+        // Create new object creation expr with required parameters
 
         return null;
     }
 
     private static Node getMethodCallExpr(Node nodeTo) {
+        // Look into all classes and get all methods
+        // Look for methods with return type of nodeTo type
+        // Look for local method calls before nodeTo line usage
+        // Use type solver for basic types** MAYBE
 
         return null;
     }
 
     private static Node getVariableDeclarator(Node nodeTo) {
+        // Anything in local scope before expression
+        // Field declarations
+        // Method parameters of local scope
 
         return null;
     }
