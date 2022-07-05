@@ -2,14 +2,25 @@ public class TestMutation {
 //    boolean testing = x > 5 && x < 4, testing2 = y < 4;
 
     public boolean barMutation() {
-        if(x > 4 || y < 4 || z < 4) {}
-        
+        //if (x > 5) {}                                     // -> Exception, single expression
+        //if (!(x > 5)) {}                                  // -> Exception, single expression
+        //if (x > 5 || y < 4) {}                            // -> Removes random expression
+        //if (!(x > 5) || (y > 5 && z > 5)) {}              // -> Removes random expression
 
+        //boolean test = true;                              // -> Exception, not a binary expression
+        //boolean test = x > 5 && y > 5;                    // -> Removes random expression
 
+        //int x = y > 5 ? 0 : 1;                            // -> Removes the ternary expression and resolves to true value
+        //int x = x > 5 && y > 5 ? 0 : 1;                   // -> Removes random expression
 
+        //for (int i=0; i<10; i++) {}                       // -> Exception, single expression
+        //for (int i=0; i<10 && i!=2; i++) {}               // -> Removes random expression
 
+        //while (x > 5) {}                                  // -> Exception, single expression
+        //while (x > 5 && y > 5) {}                         // -> Removes random expression
 
-
+        //return x > 5;                                     // -> Exception, single expression
+        //return x > 5 && y < 5;                            // -> Removes random expression
 
 
 //      boolean test = a > 5 && a < 5, test2 = b < 4 || b > 5;

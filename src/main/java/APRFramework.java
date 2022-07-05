@@ -1,28 +1,28 @@
 import GP.GP.AbstractSyntaxTree;
 import GP.GP.GPRunner;
-import GP.MutationOperators.BAR;
+import GP.MutationOperators.*;
 //import GP.MutationOperators.BER;
-import GP.MutationOperators.BER;
-import GP.MutationOperators.LRR;
-import GP.MutationOperators.WRM;
 import Util.Javadoc;
 import Util.ParserRunner;
 import Util.ValidDefectsPatches;
 import com.github.javaparser.ast.CompilationUnit;
 import org.apache.commons.io.FileUtils;
-
 import java.io.File;
 import java.nio.file.Paths;
 
 public class APRFramework {
     public static void main(String[] args) throws Exception {
-        CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("ber.java"));
+        CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("svm.java"));
 
-        //BAR.mutate(mutationAST);
-        BER.mutate(mutationAST);
-        //LRR.mutate(mutationAST);
-        //WRM.mutate(mutationAST);
-
+        try {
+            //BAR.mutate(mutationAST);
+            //BER.mutate(mutationAST);
+            //LRR.mutate(mutationAST);
+            //WRM.mutate(mutationAST);
+            SVM.mutate(mutationAST);
+        } catch (Exception ex) {
+            System.out.println("Exception was encountered handling gracefully " + ex);
+        }
 
         // This keeps formatting the same, useful for diff comparisons of patch and fixed code...
         ////LexicalPreservingPrinter.setup(mutationAST);

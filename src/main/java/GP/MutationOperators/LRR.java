@@ -30,7 +30,7 @@ public final class LRR {
             default:
                 removeNode.removeForced();
         }
-
+        
         System.out.println(program);
 
         return program.clone();
