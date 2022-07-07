@@ -63,6 +63,4 @@ WORKDIR /APRFramework
 COPY . .
 RUN mvn clean compile assembly:single
 
-# Create jar file: mvn compile assembly:single
-# Test code: mvn test
-# Execute jar file: CMD java -jar target/APRFramework-jar-with-dependencies.jar
+CMD java -jar target/APRFramework-jar-with-dependencies.jar

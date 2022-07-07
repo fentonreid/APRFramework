@@ -12,6 +12,8 @@ defects4j:
     method: identifier
     selection:
       Lang: [1]
+      #Closure: all
+      #Lang: [1]
       #Lang: [1]
       #Lang: [1,3-10]
       #Chart: all

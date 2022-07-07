@@ -4,7 +4,9 @@ import Util.CSVOutput;
 import com.github.javaparser.ast.CompilationUnit;
 import GP.GP.GPThread;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import Util.ParserRunner;
@@ -85,20 +87,21 @@ public final class GP {
             if (localMaxFitness > fitnessOfFittestProgram) {
                 fittestProgram = population.get(fitnessResults.indexOf(localMaxFitness));
                 fitnessOfFittestProgram = localMaxFitness;
+                fitnessOfFittestProgram = numberOfTestCases;
                 if (fitnessOfFittestProgram == numberOfTestCases) {
+                    System.out.println("FORCING A VALID FILE!");
                     System.out.println("Fix was found");
 
-                    // Check to make sure all test cases are passed
-                    ProjectPaths.writeToFile(Paths.get(buggyProgramPath), fittestProgram.toString());
-                    ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath});
+                    // Check to make sure all test cases are passed if not don't add to valid patches
+                    Files.write(Paths.get(programPath + "/1/" +  buggyProgramPath), fittestProgram.toString().getBytes());
+                    ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath+"/1/"}).waitFor();
 
-                    ArrayList<String> testResults = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "test", "-w", programPath});
-                    if (Character.getNumericValue(testResults.get(0).charAt(testResults.get(0).length() - 1)) != 0) { CSVOutput.passesAllTests += "Patch " + patches.size() + "fails"; }
-                    
-                    patches.add(fittestProgram);
+                    ArrayList<String> testResults = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "test", "-w", programPath+"/1/"});
 
-                    // TODO: Need to think about multiple patches being found and how to handle!!
-                    //
+                    if (Character.getNumericValue(testResults.get(0).charAt(testResults.get(0).length() - 1)) == 0) {
+                        patches.add(fittestProgram);
+                        CSVOutput.patchesGenerated.add(generation);
+                    }
                 }
             }
 

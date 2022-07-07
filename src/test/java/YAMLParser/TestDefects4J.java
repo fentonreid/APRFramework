@@ -33,7 +33,7 @@ public class TestDefects4J {
     @DisplayName("Test Case Selection -> Method identifier")
     public void testMethodIdentifier() throws Exception {
         // Get all lang bugs
-        ArrayList<Integer> langBids = new ArrayList<>(new Defects4J().getAllSingleIdentifier("Lang"));
+        ArrayList<Integer> langBids = new ArrayList<>(new Defects4J().validBugs.get("Lang"));
 
         assertNotNull(langBids);
         assertTrue(langBids.size() >= 1);
@@ -220,7 +220,7 @@ public class TestDefects4J {
     @Test
     @DisplayName("Get Range Single Identifier")
     public void testGetRangeSingleIdentifier() throws Exception {
-        ArrayList<Integer> langBids = new ArrayList<>(new Defects4J().getAllSingleIdentifier("Lang"));
+        ArrayList<Integer> langBids = new ArrayList<>(new Defects4J().validBugs.get("Lang"));
 
         /* Invalid :: Range is in incorrect form
                 method: identifier

@@ -1,0 +1,5 @@
+General Details,,Generations,Population Size,Mutation Rate,Number Of Threads,Estimated Compile Time (s),Estimated Test Time (s),Relevant Test Cases,Total Test Cases
+,,1,1,1.0,1,1.73,0.54,4,113
+
+Iteration Breakdown,,Iteration,Mutation Operator,Patches generated,Patches found at generation,All Tests Passed,Total time taken (s)
+,,1,MutationOperator1,2,[0],YES,17.70

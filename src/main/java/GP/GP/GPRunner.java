@@ -49,9 +49,7 @@ public final class GPRunner {
                         endTestTime = System.nanoTime();
                     }
 
-                    if (!Files.exists(Paths.get(checkoutPath))) {
-                        throw new Exception("Could not checkout '" + checkoutPath + "' properly");
-                    }
+                    if (!Files.exists(Paths.get(checkoutPath))) { throw new Exception("Could not checkout '" + checkoutPath + "' properly"); }
                 }
 
                 String checkoutPath = checkoutFolderBase + "1";

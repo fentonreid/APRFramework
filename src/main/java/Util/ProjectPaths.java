@@ -4,16 +4,12 @@ import com.github.javaparser.ast.CompilationUnit;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Properties;
 
 public final class ProjectPaths {
     public static Path getBuggyProgramPath(String checkoutPath) throws Exception {
-        // Read the defects4j.build.properties file
         Properties prop;
         try {
             prop = new Properties();
@@ -21,13 +17,10 @@ public final class ProjectPaths {
         } catch (FileNotFoundException ex) { throw new Exception("'defects4j.build.properties' file not found suggesting '" + checkoutPath + "' was not fetched correctly"); }
 
         String modifiedClass = prop.getProperty("d4j.classes.modified");
-        String relevantClasses = prop.getProperty("d4j.classes.relevant");
         String pathToClasses = prop.getProperty("d4j.dir.src.classes");
 
         // Ensure properties are not null, the modified class has a length of one, relevant bugs include the modified bug, srcPath + modifiedBug exists
-        if (modifiedClass == null || relevantClasses == null || pathToClasses == null) { throw new NullPointerException("Could not read 'defects4j.build.properties' file correctly"); }
-        if (modifiedClass.split(",").length > 1) { throw new IndexOutOfBoundsException("The modified class has a length greater than one and therefore is not compatible with this framework '" + modifiedClass + "' "); }
-        if (!(relevantClasses.contains(modifiedClass))) { throw new NullPointerException("The relevant classes does not include the modified class and therefore the bug cannot be fixed by changing " + modifiedClass); }
+        if (modifiedClass == null || pathToClasses == null) { throw new NullPointerException("Could not read 'defects4j.build.properties' file correctly"); }
 
         Path modifiedClassPath = Paths.get("/" + pathToClasses + "/" + modifiedClass.replaceAll("\\.", File.separator) + ".java");
         if(!Files.exists(Paths.get(checkoutPath + modifiedClassPath))) { throw new Exception("Could not find the modified class path '" + modifiedClassPath +"'"); }

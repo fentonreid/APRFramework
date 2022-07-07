@@ -7,3 +7,6 @@ README.md
 .out
 .DS_Store
 Dockerfile
+target
+output
+javadoc

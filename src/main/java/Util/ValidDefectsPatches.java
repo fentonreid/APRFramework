@@ -15,8 +15,10 @@ public final class ValidDefectsPatches {
 
     // This function, checkouts each defects4j bug and assure that it has a valid properties file, next the src patch is copied to the /patches folder for use with the website
     public static void main() throws Exception {
-        for (String identifier : ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "pids"})) {
-            HashSet<Integer> bids = new Defects4J().getAllSingleIdentifier(identifier);
+        HashMap<String, HashSet<Integer>> validBugs =  new Defects4J().validBugs;
+
+        for (String identifier : validBugs.keySet()) {
+            Set<Integer> bids = validBugs.get(identifier);
             for (int bid : bids) {
                 // Checkout the bug
                 String checkoutPath = "/tmp/" + identifier + "_" + bid + "/";

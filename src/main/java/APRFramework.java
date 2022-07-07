@@ -6,6 +6,7 @@ import Util.Javadoc;
 import Util.ParserRunner;
 import Util.ShellProcessBuilder;
 import Util.ValidDefectsPatches;
+import YAMLParser.Defects4J;
 import com.github.javaparser.ast.CompilationUnit;
 import org.apache.commons.io.FileUtils;
 import java.io.File;
@@ -14,12 +15,6 @@ import java.util.ArrayList;
 
 public class APRFramework {
     public static void main(String[] args) throws Exception {
-        // Ensure clean setup
-        File outputFolder = new File("/output");
-        File checkoutFolder = new File("/tmp/checkout");
-        if(outputFolder.exists()) { FileUtils.deleteDirectory(outputFolder); }
-        if(checkoutFolder.exists()) { FileUtils.deleteDirectory(checkoutFolder); }
-
         CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("svm.java"));
 
         try {
@@ -41,20 +36,17 @@ public class APRFramework {
         ParserRunner.main("config.yml");
 
         // Call Javadoc
-        System.out.println("JAVADOC??");
         if (ParserRunner.output.javadoc) { Javadoc.main(); }
 
         // Call PatchViewer
-        System.out.println("PATCHES?");
         if (ParserRunner.output.patches) { ValidDefectsPatches.main(); }
 
         // Call GPRunner
         if (ParserRunner.output.gp) { GPRunner.main(); }
 
-        // RUN IT
-        // docker run -it -v $(pwd)/:/APRFramework/  dev
+        // Docker run command to copy over the users config.yml if present and map output and javadoc directories
+        // docker run -v ${pwd}/config.yml:/APRFramework/config.yml -v ${pwd}/output/:/output/ -v ${pwd}/javadoc/:/javadoc/ dev  -> command to users
 
-        // Run maven
-        // mvn compile exec:java -Dexec.mainClass="APRFramework"
+        //  docker run -v ${pwd}/:/APRFramework dev          -> debugging
     }
 }
