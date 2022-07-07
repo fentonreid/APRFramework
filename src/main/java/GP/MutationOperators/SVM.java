@@ -51,7 +51,7 @@ public final class SVM {
         }
 
         /* Perform replacement */
-        nodeTo.replace(nodeFrom);
+        //nodeTo.replace(nodeFrom);
 
         /* Print and return */
         System.out.println(program);

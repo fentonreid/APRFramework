@@ -54,12 +54,15 @@ RUN wget https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache
     rm /tmp/mvn/apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
     rm /tmp/mvn/apache-maven-${MAVEN_VERSION}-bin.tar.gz.sha512
 
+
 #############################################################################
 # APRFramework runner
 #############################################################################
 
 WORKDIR /APRFramework
 COPY . .
+RUN mvn clean compile assembly:single
 
-# Install required dependencies
-#CMD mvn compile exec:java -Dexec.mainClass="main.java.APRFramework"
+# Create jar file: mvn compile assembly:single
+# Test code: mvn test
+# Execute jar file: CMD java -jar target/APRFramework-jar-with-dependencies.jar

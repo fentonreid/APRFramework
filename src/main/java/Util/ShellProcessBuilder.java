@@ -33,13 +33,14 @@ public final class ShellProcessBuilder {
             throw new Exception("The command passed is empty or contains null, consult the defects4j github examples for valid command user or man pages is using a bash command");
         } catch (IOException ex) {
             throw new Exception("An input/output error has occurred " + ex);
+        } catch (Exception ex) {
+            throw new Exception("OTHER ISSUE " + ex);
         }
     }
 
     public static ArrayList<String> getStandardInput(String[] command) throws Exception {
         try {
             Process runningProcess = ShellProcessBuilder.runCommand(command);
-            runningProcess.waitFor();
 
             BufferedReader standardInput = new BufferedReader(new InputStreamReader(runningProcess.getInputStream()));
             ArrayList<String> result = new ArrayList<>();
@@ -50,11 +51,13 @@ public final class ShellProcessBuilder {
                 }
             }
 
+            runningProcess.waitFor();
+
             if (result.size() > 0) { return result; }
             throw new Exception();
 
         } catch (Exception ex) {
-            throw new Exception("Command '" + Arrays.toString(command) + "' failed no standard input was recorded");
+            throw new Exception("Command '" + Arrays.toString(command) + "' failed no standard input was recorded" + " " + ex);
         }
     }
 }

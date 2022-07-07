@@ -3,6 +3,7 @@
 
 # Jar Files
 *.jar
+target/
 
 # IntelliJ
 .idea/**

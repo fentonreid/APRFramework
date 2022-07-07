@@ -86,7 +86,7 @@ public final class GP {
                 fittestProgram = population.get(fitnessResults.indexOf(localMaxFitness));
                 fitnessOfFittestProgram = localMaxFitness;
                 if (fitnessOfFittestProgram == numberOfTestCases) {
-                    System.out.println("Fix was found ");
+                    System.out.println("Fix was found");
 
                     // Check to make sure all test cases are passed
                     ProjectPaths.writeToFile(Paths.get(buggyProgramPath), fittestProgram.toString());
@@ -123,6 +123,5 @@ public final class GP {
         System.out.println("No fix was created in " + generations);
         patches.add(ast);
         return patches;
-        //return null;
     }
 }

@@ -1,7 +1,6 @@
 package YAMLParser;
 
 import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import java.io.File;
@@ -31,7 +30,6 @@ public class TestGp {
         return mutationOperators;
     }
 
-    @BeforeEach
     public void reinitialise() {
         gpHashMap = new LinkedHashMap<>();
         gpHashMap.put("generations", 1);
@@ -45,6 +43,7 @@ public class TestGp {
     @Test
     @DisplayName("Generations")
     public void testGenerations() throws Exception {
+        reinitialise();
         assertEquals(new Gp(gpHashMap).generations, 1); // Assert property was assigned
 
         gpHashMap.remove("generations"); // Throws property does not exist
@@ -69,6 +68,7 @@ public class TestGp {
     @Test
     @DisplayName("Population Size")
     public void testPopulationSize() throws Exception {
+        reinitialise();
         assertEquals(new Gp(gpHashMap).populationSize, 1); // Assert property was assigned
 
         gpHashMap.remove("populationSize"); // Throws property does not exist
@@ -93,6 +93,7 @@ public class TestGp {
     @Test
     @DisplayName("Mutation Rate")
     public void testMutationRate() throws Exception {
+        reinitialise();
         assertEquals(new Gp(gpHashMap).mutationRate, 0.95); // Assert property was assigned
 
         gpHashMap.remove("mutationRate"); // Throws property does not exist
@@ -148,6 +149,7 @@ public class TestGp {
     @Test
     @DisplayName("Iterations Per Bug")
     public void testIterationsPerBug() throws Exception {
+        reinitialise();
         assertEquals(new Gp(gpHashMap).iterationsPerBug, 1); // Assert property was assigned
 
         gpHashMap.remove("iterationsPerBug"); // Throws property does not exist
@@ -172,6 +174,7 @@ public class TestGp {
     @Test
     @DisplayName("Number Of Threads")
     public void testNumberOfThreads() throws Exception {
+        reinitialise();
         assertEquals(new Gp(gpHashMap).numberOfThreads, 1); // Assert property was assigned
 
         gpHashMap.remove("numberOfThreads"); // Throws property does not exist

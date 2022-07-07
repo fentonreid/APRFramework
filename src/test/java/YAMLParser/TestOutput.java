@@ -1,6 +1,7 @@
 package YAMLParser;
 
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,7 +10,6 @@ import java.util.LinkedHashMap;
 public class TestOutput {
     public LinkedHashMap<String, Object> outputHashMap;
 
-    @BeforeEach
     public void reinitialise() {
         outputHashMap = new LinkedHashMap<>();
         outputHashMap.put("csv", "summary");
@@ -20,8 +20,8 @@ public class TestOutput {
     @Test
     @DisplayName("CSV")
     public void testCsv() throws Exception {
+        reinitialise();
         assertEquals(new Output(outputHashMap).summaryCSV, "summary"); // Assert property was assigned
-
         outputHashMap.remove("csv"); // Throws property does not exist
         assertThrows(Exception.class, () -> new Output(outputHashMap));
 
@@ -32,6 +32,7 @@ public class TestOutput {
     @Test
     @DisplayName("Javadoc")
     public void testJavadoc() throws Exception {
+        reinitialise();
         assertEquals(new Output(outputHashMap).javadoc, true); // Assert property was assigned
 
         outputHashMap.remove("javadoc"); // Do not throw when property does not exist
@@ -44,6 +45,7 @@ public class TestOutput {
     @Test
     @DisplayName("Patches")
     public void testPatches() throws Exception {
+        reinitialise();
         assertEquals(new Output(outputHashMap).patches, true); // Assert property was assigned
 
         outputHashMap.remove("patches"); // Do not throw when property does not exist

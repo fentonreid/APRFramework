@@ -28,7 +28,7 @@ public final class GPRunner {
             for (int bid : entry.getValue()) {
                 CSVOutput.reinitalise();
 
-                String checkoutFolderBase = "/tmp/" + identifier + "_" + bid + "/";
+                String checkoutFolderBase = "/tmp/checkout/" + identifier + "_" + bid + "/";
 
                 for (int threadCount=1; threadCount<= ParserRunner.gp.numberOfThreads;  threadCount++) {
                     String checkoutPath = checkoutFolderBase + threadCount;
@@ -36,16 +36,16 @@ public final class GPRunner {
                     if (threadCount > 1) {
                         FileUtils.copyDirectory(new File(checkoutFolderBase + "1"), new File(checkoutPath));
                     } else {
-                        Process finishedProcess = ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", identifier, "-v", bid + "b", "-w", checkoutPath});
-                        if (new InputStreamReader(finishedProcess.getInputStream()).read() != -1) { throw new Exception("Error when trying to checkout '" + identifier + "' with a bug id of '" + bid + " at thread " + ParserRunner.gp.numberOfThreads + "'"); }
+                        int exitCode = ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", identifier, "-v", bid + "b", "-w", checkoutPath}).waitFor();
+                        if (exitCode != 0) { throw new Exception("Error could not compile the program properly"); }
 
                         // Cache files for quicker processing
                         startCompileTime = System.nanoTime();
-                        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", checkoutPath});
+                        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", checkoutPath}).waitFor();
                         endCompileTime = System.nanoTime();
 
                         startTestTime = System.nanoTime();
-                        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "test", "-r", "-w", checkoutPath});
+                        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "test", "-r", "-w", checkoutPath}).waitFor();
                         endTestTime = System.nanoTime();
                     }
 
@@ -66,14 +66,14 @@ public final class GPRunner {
                 // Get the buggy file and save as AST representation
                 Path buggyFilePath = ProjectPaths.getBuggyProgramPath(checkoutPath);
                 CompilationUnit buggyAST = AbstractSyntaxTree.generateAST(Paths.get(checkoutPath + buggyFilePath));
-
+                
                 for (String mutationOperator : ParserRunner.gp.mutationOperators) {
                     ArrayList<CompilationUnit> patches = new ArrayList<>();
 
                     for (int i = 1; i <= ParserRunner.gp.iterationsPerBug; i++) {
                         long startIterationTime = System.nanoTime();
                         ArrayList<CompilationUnit> currentIterationPatches = new GP(buggyAST, Class.forName("GP.MutationOperators." + mutationOperator), numberOfTestCases, checkoutFolderBase, buggyFilePath.toString()).main();
-                        if(currentIterationPatches.size() > 1) { patches.addAll(currentIterationPatches); }
+                        if(currentIterationPatches.size() > 0) { patches.addAll(currentIterationPatches); }
                         long endIterationTime = System.nanoTime();
 
                         CSVOutput.addIterationBreakdownEntry(i, mutationOperator, currentIterationPatches.size(), CSVOutput.formatTime(startIterationTime, endIterationTime));
@@ -87,7 +87,7 @@ public final class GPRunner {
                 CSVOutput.generateCSV(Paths.get("/output/" + identifier + "_" + bid + "/" + ParserRunner.output.summaryCSV + ".csv"));
 
                 // Copy fixed bug into /output
-                ProjectPaths.copyFile(ProjectPaths.getFixedProgramPath(identifier, bid), Paths.get("/output/" + identifier + "_" + bid + "/" + "Patch" + bid));
+                ProjectPaths.copyFile(ProjectPaths.getFixedProgramPath(identifier, bid), Paths.get("/output/" + identifier + "_" + bid + "/Defects4J_Validated_Patch"));
 
                 //Delete the /tmp/{identifier}_{bid} directory
                 FileUtils.deleteDirectory(new File(checkoutFolderBase));

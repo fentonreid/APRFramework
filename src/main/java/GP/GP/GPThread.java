@@ -23,8 +23,6 @@ public final class GPThread extends Thread {
         this.programPath = programPath + gpThreadName;
         this.buggyProgramPath = this.programPath + buggyProgramPath;
 
-        System.out.println(buggyProgramPath);
-        
         fitnessResults = new ArrayList<>();
     }
 
@@ -34,7 +32,7 @@ public final class GPThread extends Thread {
                 ProjectPaths.writeToFile(Paths.get(buggyProgramPath), program.toString());
 
                 // Defects4j compile checked out program
-                ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath});
+                ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath}).waitFor();
 
                 // Defects4j run tests on program
                 ArrayList<String> testResults = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "test", "-r", "-w", programPath});
