@@ -23,4 +23,4 @@ output:
   csv: summary
   javadoc: false
   patches: false
-  gp: true
+  gp: false

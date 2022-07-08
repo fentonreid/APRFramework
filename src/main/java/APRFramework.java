@@ -22,7 +22,7 @@ public class APRFramework {
             //BER.mutate(mutationAST);
             //LRR.mutate(mutationAST);
             //WRM.mutate(mutationAST);
-            //SVM.mutate(mutationAST);
+            SVM.mutate(mutationAST);
         } catch (Exception ex) {
             System.out.println("Exception was encountered handling gracefully " + ex);
         }
@@ -30,9 +30,8 @@ public class APRFramework {
         // This keeps formatting the same, useful for diff comparisons of patch and fixed code...
         ////LexicalPreservingPrinter.setup(mutationAST);
         ////System.out.println(LexicalPreservingPrinter.print(mutationAST));
-
-
-        // Call parserRunner
+        
+        /*// Call parserRunner
         ParserRunner.main("config.yml");
 
         // Call Javadoc
@@ -42,7 +41,7 @@ public class APRFramework {
         if (ParserRunner.output.patches) { ValidDefectsPatches.main(); }
 
         // Call GPRunner
-        if (ParserRunner.output.gp) { GPRunner.main(); }
+        if (ParserRunner.output.gp) { GPRunner.main(); }*/
 
         // Docker run command to copy over the users config.yml if present and map output and javadoc directories
         // docker run -v ${pwd}/config.yml:/APRFramework/config.yml -v ${pwd}/output/:/output/ -v ${pwd}/javadoc/:/javadoc/ dev  -> command to users

@@ -1,16 +1,26 @@
 public class TestMutation {
-    enum test {
+    /*enum test {
         LOW,
         MEDIUM,
         HIGH
-    }
+    }*/
 
-    public boolean barMutation() {
+    int fieldVar = 10;
+
+    public boolean barMutation(int param) {
 
         int x = 0;
-        method1();
-        new TestMutation();
+        int y = 5;
+        method1(x);
+        method1(y);
+        int z = x + y;
 
-        return true;
+        //method1();
+        //new TestMutation();
+        int ax = 0;
+
+        //return true;
     }
+
+    public int method1(int x) {}
 }
