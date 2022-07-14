@@ -1,6 +1,6 @@
 package GP.MutationOperators;
 
-import Util.GPHelpers;
+import Util.MutationHelpers;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.FieldDeclaration;
@@ -24,12 +24,12 @@ public final class LRRelocation {
         System.out.println(nodes);
 
         // Take a random node
-        Node replacementNode1 = nodes.get(GPHelpers.randomIndex(nodes.size()));
+        Node replacementNode1 = nodes.get(MutationHelpers.randomIndex(nodes.size()));
 
         nodes.remove(replacementNode1);
 
         // Take another random node
-        Node replacementNode2 = nodes.get(GPHelpers.randomIndex(nodes.size()));
+        Node replacementNode2 = nodes.get(MutationHelpers.randomIndex(nodes.size()));
 
         System.out.println(replacementNode1);
         System.out.println(replacementNode2);
@@ -61,6 +61,6 @@ public final class LRRelocation {
         });
 
         System.out.println("METHOD NODES: " + methodNodes);
-        return methodNodes.get(GPHelpers.randomIndex(methodNodes.size()));
+        return methodNodes.get(MutationHelpers.randomIndex(methodNodes.size()));
     }
 }

@@ -1,29 +1,42 @@
+enum test {
+    LOW,
+    MEDIUM,
+    HIGH
+}
+
 public class Person {
-    public int age = 10;
+    //public int age = 10;
+    //public test enumTest2 = test.MEDIUM;
 
     public Person() {}
     public Person(String name) {}
     public Person(String name, int a) {}
+    public int testPerson(test a) {}
 }
 
 public class TestMutation {
-    enum test {
-        LOW,
-        MEDIUM,
-        HIGH
-    }
+    //public int age2 = 20;
+
+    public TestMutation() {}
 
     //int fieldVar = 10;
 
-    public boolean barMutation(int param) {
+    public boolean barMutation(String a, int param) {
 
         //new Person("Fenton");
         //new Person("Fenton", 10);
         //test.HIGH;
 
-       //String stringTest = "testing";
+        //String stringTest = "testing";
+        //method1(10);
+        //int x = 10;
+
         method1(10);
-        int x = 10;
+
+        //String a = "ada";
+        //new Person();
+        //int b = 10;
+        //Person test = new Person();
 
         
         //Person ada = new Person();

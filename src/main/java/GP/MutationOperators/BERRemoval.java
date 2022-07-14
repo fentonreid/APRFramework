@@ -1,6 +1,6 @@
 package GP.MutationOperators;
 
-import Util.GPHelpers;
+import Util.MutationHelpers;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.BinaryExpr;
@@ -15,7 +15,7 @@ public final class BERRemoval {
         if (expressions.size() == 0) { throw new Exception("No valid binary expression was found"); }
         
         // Pick base child at random
-        BinaryExpr baseChild = expressions.get(GPHelpers.randomIndex(expressions.size()));
+        BinaryExpr baseChild = expressions.get(MutationHelpers.randomIndex(expressions.size()));
         System.out.println(baseChild);
         // Get the parent of the base child and ensure that it is a compound boolean expression
         if (baseChild.getParentNode().isPresent() && (baseChild.getParentNode().get() instanceof Expression)) {

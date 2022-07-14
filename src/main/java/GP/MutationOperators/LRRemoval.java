@@ -1,6 +1,6 @@
 package GP.MutationOperators;
 
-import Util.GPHelpers;
+import Util.MutationHelpers;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.stmt.*;
@@ -11,7 +11,7 @@ public final class LRRemoval {
     public static CompilationUnit mutate(CompilationUnit program) {
         // Remove a statement or expression from the program
         List<Node> nodeList = LRR.nodeCollector(program, LRR.getAllowedNodes());
-        Node removeNode = nodeList.get(GPHelpers.randomIndex(nodeList.size()));
+        Node removeNode = nodeList.get(MutationHelpers.randomIndex(nodeList.size()));
 
         switch(removeNode.getClass().getSimpleName()) {
             case "TryStmt":
@@ -23,7 +23,7 @@ public final class LRRemoval {
                 tryNodes.addAll(tryStmt.getCatchClauses());
                 tryStmt.getFinallyBlock().ifPresent(tryNodes::add);
 
-                Node removeTryNode = tryNodes.get(GPHelpers.randomIndex(tryNodes.size()));
+                Node removeTryNode = tryNodes.get(MutationHelpers.randomIndex(tryNodes.size()));
                 removeTryNode.removeForced();
             default:
                 removeNode.removeForced();
