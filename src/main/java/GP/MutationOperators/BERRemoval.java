@@ -49,7 +49,7 @@ public final class BERRemoval {
             }
 
         } else {
-            throw new Exception("The boolean expression has only one operator and so cannot be removed");
+            throw new NullPointerException("The boolean expression has only one operator and so cannot be removed");
         }
 
         System.out.println(program);

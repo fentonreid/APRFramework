@@ -15,17 +15,17 @@ import java.util.ArrayList;
 
 public class APRFramework {
     public static void main(String[] args) throws Exception {
-        CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("MutationTests/berAddition.java"));
-        
+        CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("MutationTests/berRemoval.java"));
+
+        //BEM.mutate(mutationAST);
         //BAR.mutate(mutationAST);
         //BER.mutate(mutationAST);
-        BERAddition.mutate(mutationAST);
-        //BERRemoval.mutate(mutationAST);
+        //BERAddition.mutate(mutationAST);
+        BERRemoval.mutate(mutationAST);
         //LRelocation.mutate(mutationAST);
         //LRemoval.mutate(mutationAST);
         //LRRelocation.mutate(mutationAST);
         //System.out.println(LRR.mutate(mutationAST));
-        //WRM.mutate(mutationAST);
         //SVM.mutate(mutationAST);
 
         // This keeps formatting the same, useful for diff comparisons of patch and fixed code...

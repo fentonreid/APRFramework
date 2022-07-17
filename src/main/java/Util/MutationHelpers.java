@@ -61,6 +61,11 @@ public final class MutationHelpers {
         return arguments;
     }
 
+    private static boolean methodImplemented(MethodDeclaration md) {
+        if (!md.findAncestor(ClassOrInterfaceDeclaration.class).get().isInterface() && !md.findAncestor(ClassOrInterfaceDeclaration.class).get().isAbstract()) { return true; }
+        return (md.resolve().isStatic());
+    }
+
     public static List<Expression> resolveCollection(Node node, String resolvedType) {
         List<Expression> expressions = new ArrayList<>();
 
@@ -76,8 +81,8 @@ public final class MutationHelpers {
     public static List<Expression> resolveLocalTypes(Node node, String resolvedType) {
         List<Expression> expressions = new ArrayList<>();
 
-        // Get enum declarations in CU
         node.findCompilationUnit().ifPresent(cu -> {
+            // Get enum declarations in Compilation Unit scope
             cu.findAll(EnumDeclaration.class).forEach(ed -> {
                 if (ed.resolve().getClassName().equals(resolvedType)) {
                     for (EnumConstantDeclaration enumConstant : ed.getEntries()) {
@@ -98,6 +103,10 @@ public final class MutationHelpers {
         });
 
         node.findAncestor(MethodDeclaration.class).ifPresent(md -> {
+            // Skip Method Declaration if method is an interface and not static or is abstract
+
+            if (!md.findAncestor(ClassOrInterfaceDeclaration.class).isPresent() || !methodImplemented(md)) { return; }
+
             // Get all method call expressions and check the return type-> person.getName()
             md.findAll(MethodCallExpr.class).forEach(mce -> {
                 if (mce.resolve().getReturnType().describe().equals(resolvedType) && compareLineNumbers(mce.getBegin(), node.getBegin())) {
@@ -145,7 +154,7 @@ public final class MutationHelpers {
             // Get all methods in the CompilationUnit with same return type and resolve parameters
             cu.findAll(MethodDeclaration.class).forEach(md -> {
                 // If the return type of the method call matches and the signature must not equal the signature of the method the node is in, otherwise we could get a recursion issue
-                if (md.resolve().getReturnType().describe().equals(resolvedType) && !md.resolve().getQualifiedSignature().equals(nodeMethodSignature)) {
+                if (md.resolve().getReturnType().describe().equals(resolvedType) && !md.resolve().getQualifiedSignature().equals(nodeMethodSignature) && methodImplemented(md)) {
                     // Create a method call expression and resolve types
                     MethodCallExpr currentMCE = new MethodCallExpr().setName(md.resolve().getName());
                     NodeList<Expression> arguments = getRequiredTypes(node, getMethodParams(md.resolve()));
@@ -157,20 +166,28 @@ public final class MutationHelpers {
                     }
 
                     // If the methodDeclaration is a local method to nodeFrom e.g. TestMutation.method1() -> where nodeFrom is in TestMutation class
-                    String className = node.findAncestor(ClassOrInterfaceDeclaration.class).isPresent() ? node.findAncestor(ClassOrInterfaceDeclaration.class).get().resolve().getClassName() : null;
+                    ClassOrInterfaceDeclaration coid = node.findAncestor(ClassOrInterfaceDeclaration.class).isPresent() ? node.findAncestor(ClassOrInterfaceDeclaration.class).get() : null;
+                    if (coid == null) { return; }
+
+                    String className = coid.resolve().getClassName();
                     if (className != null && md.resolve().getClassName().equals(className)) {
                         expressions.add(currentMCE);
 
-                        // If the methodDeclaration is in another class e.g. Person.getAge() -> where nodeFrom is in TestMutation class
+                    // If the methodDeclaration is static then resolve via static methods
+                    } else if (md.resolve().isStatic()) {
+                        // Add Class or Interface name + method name
+                        expressions.add(new FieldAccessExpr().setScope(new NameExpr(md.resolve().getClassName())).setName(String.valueOf(currentMCE)).clone());
+
+                    // If the methodDeclaration is in another class e.g. Person.getAge() -> where nodeFrom is in TestMutation class
                     } else {
                         // Check for nodes in nodeFrom's local scope with className of required type e.g. Person
                         List<Expression> resolvedNodes = resolveLocalTypes(node, md.resolve().getClassName());
 
                         // If the required node was found in the local scope then create a fieldAccessExpr to combine both the node and method call expr e.g. new Person().getAge()
                         if (resolvedNodes.size() > 0) {
-                            expressions.add(new FieldAccessExpr().setScope(resolvedNodes.get(MutationHelpers.randomIndex(resolvedNodes.size()))).setName(String.valueOf(currentMCE)));
+                                expressions.add(new FieldAccessExpr().setScope(resolvedNodes.get(MutationHelpers.randomIndex(resolvedNodes.size()))).setName(String.valueOf(currentMCE)));
 
-                            // No object of type found in local scope, create a fieldAccessExpr using a constructor of required type e.g. new Person().getAge()
+                        // No object of type found in local scope, create a fieldAccessExpr using a constructor of required type e.g. new Person().getAge()
                         } else {
                             List<Expression> objectCreationExprs = resolveObjectCreationExpr(node, md.resolve().getClassName());
                             if (objectCreationExprs.size() > 0) {
@@ -207,14 +224,18 @@ public final class MutationHelpers {
 
         node.findCompilationUnit().ifPresent(cu -> {
             cu.findAll(FieldDeclaration.class).forEach(fd -> {
-                // If local to nodeFrom then I can ignore as localTypes will catch this...
+                // If local to nodeFrom then ignore as localTypes will catch this
                 String nodeClass = node.findAncestor(ClassOrInterfaceDeclaration.class).isPresent() ? node.findAncestor(ClassOrInterfaceDeclaration.class).get().resolve().getClassName() : null;
                 String fdClass = fd.findAncestor(ClassOrInterfaceDeclaration.class).isPresent() ? fd.findAncestor(ClassOrInterfaceDeclaration.class).get().resolve().getClassName() : null;
-                if (nodeClass == null || fdClass == null || nodeClass.equals(fdClass) || !fd.resolve().getType().describe().equals(resolvedType)) {
-                    return;
-                }
+                if (nodeClass == null || fdClass == null || nodeClass.equals(fdClass) || !fd.resolve().getType().describe().equals(resolvedType)) { return; }
 
                 fd.getVariables().forEach(vd -> {
+                    // If the fd is static or in an interface or abstract class
+                    if (fd.isStatic() || fd.findAncestor(ClassOrInterfaceDeclaration.class).get().isInterface() || fd.findAncestor(ClassOrInterfaceDeclaration.class).get().isAbstract()) {
+                        expressions.add(new FieldAccessExpr().setScope(new NameExpr(fdClass)).setName(vd.getNameAsString()).clone());
+                        return;
+                    }
+
                     // Try and find reference to fdClass in local scope
                     List<Expression> resolvedNodes = resolveLocalTypes(node, fdClass);
                     if (resolvedNodes.size() > 0) {

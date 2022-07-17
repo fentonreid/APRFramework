@@ -6,7 +6,7 @@ import com.github.javaparser.ast.expr.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-// Boolean Expression Manipulator -> remove/add negation, switch relational and boolean operators
+    // Boolean Expression Manipulator -> remove/add negation, switch relational and boolean operators
 public final class BEM {
     public static CompilationUnit mutate(CompilationUnit program) {
         List<Expression> expressions = new ArrayList<>();
