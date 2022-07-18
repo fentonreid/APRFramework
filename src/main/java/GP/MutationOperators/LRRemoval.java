@@ -3,9 +3,7 @@ package GP.MutationOperators;
 import Util.MutationHelpers;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.stmt.*;
-import com.github.javaparser.printer.YamlPrinter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,23 +44,5 @@ public final class LRRemoval {
 
         System.out.println(program);
         return program.clone();
-    }
-
-    private static Statement getElseAndElseIfStmt(IfStmt ifStmt) {
-        List<Statement> branches = new ArrayList<>();
-
-        // Get all else if branches
-        for (Node stmt : ifStmt.getChildNodes()) {
-            if (stmt instanceof IfStmt && ((IfStmt) stmt).getElseStmt().isPresent()) {
-                branches.add(((IfStmt) stmt).getElseStmt().get());
-            }
-        }
-
-        // Have to figure out how to do this
-
-
-        return null;
-
-
     }
 }

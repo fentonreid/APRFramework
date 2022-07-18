@@ -1,18 +1,17 @@
 public class Person {
-    int age = 20;
-
-    public String getAgeAsString() {
-        String ageString = null;
-        return ageString.toString();
-   }
+    int age = 22;
 
     public void main() {
+        System.out.println("What age are you?");
 
-        try {
-            getAgeAsString();
+        if (age == 20) {
+            System.out.println("Over 20 years old!");
 
-        } catch (Exception ex) {
-            throw new NullPointerException("Cannot cast properly");
+        } else if (age > 30) {
+            System.out.println("Over 30 years old!");
+
+        } else {
+            System.out.println("Not sure, what age you are!");
         }
     }
 }

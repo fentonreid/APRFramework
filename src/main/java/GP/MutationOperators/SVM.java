@@ -33,6 +33,7 @@ public final class SVM {
                 break;
 
             case "MethodCallExpr":
+                System.out.println(((MethodCallExpr) nodeFrom).resolve().getReturnType().describe());
                 expressions = MutationHelpers.resolveCollection(nodeFrom, ((MethodCallExpr) nodeFrom).resolve().getReturnType().describe());
                 if (expressions.size() > 0) { nodeTo = expressions.get(MutationHelpers.randomIndex(expressions.size())); }
                 break;
@@ -57,10 +58,10 @@ public final class SVM {
 
     private static List<Node> collectExpressions(CompilationUnit cu) {
         List<Node> nodes = new ArrayList<>();
-        nodes.addAll(cu.findAll(MethodCallExpr.class));
-        nodes.addAll(cu.findAll(FieldAccessExpr.class));
-        nodes.addAll(cu.findAll(ObjectCreationExpr.class));
-        nodes.addAll(cu.findAll(VariableDeclarator.class));
+        //nodes.addAll(cu.findAll(MethodCallExpr.class));
+        //nodes.addAll(cu.findAll(FieldAccessExpr.class));
+        //nodes.addAll(cu.findAll(ObjectCreationExpr.class));
+        //nodes.addAll(cu.findAll(VariableDeclarator.class));
 
         System.out.println("NODES COLLECTED: " + nodes);
         return nodes;

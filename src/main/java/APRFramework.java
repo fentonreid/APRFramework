@@ -7,18 +7,18 @@ import java.nio.file.Paths;
 
 public class APRFramework {
     public static void main(String[] args) throws Exception {
-        CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("MutationTests/lRelocation.java"));
+        CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("MutationTests/svm.java"));
 
         //BEM.mutate(mutationAST);
         //BAR.mutate(mutationAST);
         //BER.mutate(mutationAST);
         //BERExpansion.mutate(mutationAST);
         //BERRemoval.mutate(mutationAST);
-        LRRelocation.mutate(mutationAST);
+        //LRRelocation.mutate(mutationAST);
         //LRRemoval.mutate(mutationAST);
         //LRRelocation.mutate(mutationAST);
-        //System.out.println(LRR.mutate(mutationAST));
-        //SVM.mutate(mutationAST);
+        //LRR.mutate(mutationAST);
+        SVM.mutate(mutationAST);
 
         // This keeps formatting the same, useful for diff comparisons of patch and fixed code...
         ////LexicalPreservingPrinter.setup(mutationAST);

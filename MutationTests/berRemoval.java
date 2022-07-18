@@ -1,9 +1,10 @@
 public class Person {
-    int favouriteNumber = 4;
+    String pendingEmployment = "yes";
+    boolean isEmployed = true;
+    boolean isCitizen = true;
 
-    public String favouriteNumber() {
+    public boolean canWork() {
 
-        String message = favouriteNumber > 0 ? "Are you a dice?" : "Hmm, not a dice!";
-        System.out.println(message);
+        return !(isCitizen && (isEmployed || pendingEmployment.equals("yes")));
     }
 }

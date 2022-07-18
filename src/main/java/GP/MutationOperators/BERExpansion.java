@@ -4,37 +4,38 @@ import java.util.*;
 import Util.MutationHelpers;
 import java.util.stream.Collectors;
 
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.stmt.IfStmt;
+import com.github.javaparser.ast.stmt.ReturnStmt;
+import com.github.javaparser.ast.stmt.WhileStmt;
+
+import static Util.MutationHelpers.collectStatementExpressions;
 
 public final class BERExpansion {
     public static CompilationUnit mutate(CompilationUnit program) throws Exception {
-        List<BinaryExpr> expressions = new ArrayList<>(program.findAll(BinaryExpr.class));
-
-        // BER Addition
-        // Pick a random expression,                                (at any leaf of the binaryExpr nodes)
-        // And add a new operator e.g. x > 5 :: x > 5 && y == 2
+        List<Expression> expressions = new ArrayList<>(collectStatementExpressions(program));
         if (expressions.size() == 0) { throw new Exception("No valid binary expression was found"); }
-
         System.out.println("Expressions: " + expressions);
 
-        // Pick a random expression
-        BinaryExpr randomExpression = expressions.get(MutationHelpers.randomIndex(expressions.size()));
-        System.out.println("PICKED A RANDOM EXPRESSION " + randomExpression);
+        // Pick a random expression from the expression list and get the children of that expression
+        List<Node> children = MutationHelpers.getChildrenOfExpression(expressions.get(MutationHelpers.randomIndex(expressions.size())));
+        Node randomExpression = children.get(MutationHelpers.randomIndex(children.size()));
 
-        // z == 3
-        // TO THIS
-        // z == 3 && y == 3
+        System.out.println("CHILDREN of " + randomExpression + " are these" + children);
 
+        // Add at random a new binary expression to either the left or right-hand side of the child expression
         BinaryExpr resultingExpression;
         if (Math.random() < 0.5) {
-            resultingExpression = new BinaryExpr().setLeft(randomExpression.clone()).setOperator(MutationHelpers.booleanOperators[MutationHelpers.randomIndex(MutationHelpers.booleanOperators.length)]).setRight(generateExpression(randomExpression));
+            resultingExpression = new BinaryExpr().setLeft((Expression) randomExpression.clone()).setOperator(MutationHelpers.booleanOperators[MutationHelpers.randomIndex(MutationHelpers.booleanOperators.length)]).setRight(generateExpression((Expression) randomExpression));
         } else {
-            resultingExpression = new BinaryExpr().setLeft(generateExpression(randomExpression)).setOperator(MutationHelpers.booleanOperators[MutationHelpers.randomIndex(MutationHelpers.booleanOperators.length)]).setRight(randomExpression.clone());
+            resultingExpression = new BinaryExpr().setLeft(generateExpression((Expression) randomExpression)).setOperator(MutationHelpers.booleanOperators[MutationHelpers.randomIndex(MutationHelpers.booleanOperators.length)]).setRight((Expression) randomExpression.clone());
         }
 
-        System.out.println("NEW EXPRESSION " + resultingExpression);
         randomExpression.replace(resultingExpression);
 
         System.out.println(program);

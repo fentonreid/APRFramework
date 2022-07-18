@@ -1,10 +1,14 @@
 package Util;
 
 import com.github.javaparser.Position;
+import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.*;
+import com.github.javaparser.ast.stmt.IfStmt;
+import com.github.javaparser.ast.stmt.ReturnStmt;
+import com.github.javaparser.ast.stmt.WhileStmt;
 import com.github.javaparser.resolution.declarations.ResolvedConstructorDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import java.util.*;
@@ -158,6 +162,7 @@ public final class MutationHelpers {
                     MethodCallExpr currentMCE = new MethodCallExpr().setName(md.resolve().getName());
                     NodeList<Expression> arguments = getRequiredTypes(node, getMethodParams(md.resolve()));
 
+
                     if (arguments != null) {
                         currentMCE.setArguments(arguments);
                     } else {
@@ -189,6 +194,7 @@ public final class MutationHelpers {
                         // No object of type found in local scope, create a fieldAccessExpr using a constructor of required type e.g. new Person().getAge()
                         } else {
                             List<Expression> objectCreationExprs = resolveObjectCreationExpr(node, md.resolve().getClassName());
+
                             if (objectCreationExprs.size() > 0) {
                                 expressions.add(new FieldAccessExpr().setScope(objectCreationExprs.get(MutationHelpers.randomIndex(objectCreationExprs.size()))).setName(String.valueOf(currentMCE)).clone());
                             }
@@ -204,14 +210,23 @@ public final class MutationHelpers {
     public static List<Expression> resolveObjectCreationExpr(Node node, String className) {
         List<Expression> expressions = new ArrayList<>();
 
-        node.findCompilationUnit().flatMap(cu -> cu.getClassByName(className)).ifPresent(i -> i.getConstructors().forEach(constructor -> {
-            // Fill the parameters for each constructor
-            ObjectCreationExpr newOCE = new ObjectCreationExpr().setType(className);
-            NodeList<Expression> arguments = MutationHelpers.getRequiredTypes(node, MutationHelpers.getConstructorParams(constructor.resolve()));
+        node.findCompilationUnit().ifPresent(cu -> cu.getClassByName(className).ifPresent(i -> {
+            // If the class has a default constructor
+            if (i.getConstructors().size() >= 1) {
+                i.getConstructors().forEach(constructor -> {
+                    // Fill the parameters for each constructor
+                    ObjectCreationExpr newOCE = new ObjectCreationExpr().setType(className);
+                    NodeList<Expression> arguments = MutationHelpers.getRequiredTypes(node, MutationHelpers.getConstructorParams(constructor.resolve()));
 
-            if (arguments != null) {
-                newOCE.setArguments(arguments);
-                expressions.add(newOCE);
+                    if (arguments != null) {
+                        newOCE.setArguments(arguments);
+                        expressions.add(newOCE);
+                    }
+                });
+
+            // If the class has no constructors then call the default constructor
+            } else {
+                expressions.add(new ObjectCreationExpr().setType(className));
             }
         }));
 
@@ -274,5 +289,62 @@ public final class MutationHelpers {
         for (String type : cuTypes) { typeToExpressionMap.put(type, resolveCollection(node, type)); }
 
         return typeToExpressionMap;
+    }
+
+    public static List<Node> getChildrenOfExpression(Node node) {
+        List<Node> expressions = new ArrayList<>();
+
+        if (!(node instanceof BinaryExpr) && !(node instanceof EnclosedExpr) && !(node instanceof UnaryExpr)) {
+            expressions.add(node);
+            return expressions;
+
+        } else if (node instanceof BinaryExpr) {
+            BinaryExpr binaryExpr = (BinaryExpr) node;
+
+            if (!Arrays.asList(MutationHelpers.booleanOperators).contains(binaryExpr.getOperator())) {
+                expressions.add(node);
+                return expressions;
+            }
+        }
+
+        for (Node child : node.getChildNodes()) {
+            expressions.addAll(getChildrenOfExpression(child));
+        }
+
+        return expressions;
+    }
+
+    public static List<Expression> collectStatementExpressions(CompilationUnit cu) {
+        List<Expression> expressions = new ArrayList<>();
+
+        // Could add return statement thing?
+        // Collect if, while and ternary expressions
+        cu.findAll(IfStmt.class).forEach(stmt -> expressions.add(stmt.getCondition()));
+        cu.findAll(WhileStmt.class).forEach(stmt -> expressions.add(stmt.getCondition()));
+        cu.findAll(ConditionalExpr.class).forEach(stmt -> expressions.add(stmt.getCondition()));
+
+        // Get boolean variable types in fields and methods of the program
+        cu.findAll(VariableDeclarationExpr.class).forEach(vde -> vde.getVariables().forEach(vd -> {
+            if (vd.resolve().getType().describe().equals("boolean") && vd.getInitializer().isPresent()) {
+                expressions.add(vd.getInitializer().get());
+            }
+        }));
+
+        cu.findAll(FieldDeclaration.class).forEach(fd -> fd.getVariables().forEach(vd -> {
+            if (vd.resolve().getType().describe().equals("boolean") && vd.getInitializer().isPresent()) {
+                expressions.add(vd.getInitializer().get());
+            }
+        }));
+
+        // Get return statements of methods that return a Boolean type
+        cu.findAll(ReturnStmt.class).forEach(stmt -> {
+            stmt.findAncestor(MethodDeclaration.class).ifPresent(md -> {
+                if (md.resolve().getReturnType().describe().equals("boolean") && stmt.getExpression().isPresent()) {
+                    expressions.add(stmt.getExpression().get());
+                }
+            });
+        });
+
+        return expressions;
     }
 }

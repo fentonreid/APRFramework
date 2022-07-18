@@ -16,10 +16,13 @@ public final class LRRelocation {
         allowedTypes.remove(SwitchEntry.class);
         allowedTypes.remove(FieldDeclaration.class);
         allowedTypes.remove(MarkerAnnotationExpr.class);
+        allowedTypes.remove(ReturnStmt.class);
+        allowedTypes.remove(ContinueStmt.class);
+        allowedTypes.remove(BreakStmt.class);
         allowedTypes.add(SwitchStmt.class);
 
         List<Node> nodes = nodeCollector(program, allowedTypes);
-        if (nodes.size() < 1) { throw new Exception("No acceptable nodes found in this program"); }
+        if (nodes == null || nodes.size() < 1) { throw new Exception("No acceptable nodes found in this program"); }
 
         // Take a random node
         Node nodeFrom = nodes.get(MutationHelpers.randomIndex(nodes.size()));
@@ -27,6 +30,9 @@ public final class LRRelocation {
 
         // Take another node in the program
         Node nodeTo = nodes.get(MutationHelpers.randomIndex(nodes.size()));
+
+        System.out.println("NODE FROM: " + nodeFrom);
+        System.out.println("NODE TO: " + nodeTo);
 
         // If the parent of the node to insert before is not part of a block statement then the original program is returned as a block statement is needed
         if (!nodeTo.findAncestor(BlockStmt.class).isPresent()) { return program.clone(); }
@@ -38,7 +44,7 @@ public final class LRRelocation {
         System.out.println(program);
         return program.clone();
     }
-    
+
     public static List<Node> nodeCollector(CompilationUnit cu, List<Class<?>> allowedNodeTypes) {
         List<List<Node>> methodNodes = new ArrayList<>();
 
@@ -54,6 +60,8 @@ public final class LRRelocation {
             if (nodeList.size() > 1) { methodNodes.add(nodeList); }
         });
 
-        return methodNodes.get(MutationHelpers.randomIndex(methodNodes.size()));
+        if (methodNodes.size() > 1) { return methodNodes.get(MutationHelpers.randomIndex(methodNodes.size())); }
+
+        return null;
     }
 }

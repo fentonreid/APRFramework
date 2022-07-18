@@ -1,11 +1,10 @@
 public class Person {
+    String pendingEmployment = "yes";
+    boolean isEmployed = true;
+    boolean isCitizen = true;
 
-    public void main() {
-        boolean a = true;
-        boolean b = true;
+    public boolean canWork() {
 
-        if (true == true) {
-            System.out.println("Over 20 years old!");
-        }
+        return !(isCitizen && (isEmployed || pendingEmployment.equals("yes")));
     }
 }
