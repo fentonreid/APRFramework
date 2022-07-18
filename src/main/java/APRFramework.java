@@ -1,29 +1,21 @@
 import GP.GP.AbstractSyntaxTree;
-import GP.GP.GPRunner;
 import GP.MutationOperators.*;
 //import GP.MutationOperators.BER;
-import Util.Javadoc;
-import Util.ParserRunner;
-import Util.ShellProcessBuilder;
-import Util.ValidDefectsPatches;
-import YAMLParser.Defects4J;
 import com.github.javaparser.ast.CompilationUnit;
-import org.apache.commons.io.FileUtils;
-import java.io.File;
+
 import java.nio.file.Paths;
-import java.util.ArrayList;
 
 public class APRFramework {
     public static void main(String[] args) throws Exception {
-        CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("MutationTests/berRemoval.java"));
+        CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("MutationTests/lRelocation.java"));
 
         //BEM.mutate(mutationAST);
         //BAR.mutate(mutationAST);
         //BER.mutate(mutationAST);
-        //BERAddition.mutate(mutationAST);
-        BERRemoval.mutate(mutationAST);
-        //LRelocation.mutate(mutationAST);
-        //LRemoval.mutate(mutationAST);
+        //BERExpansion.mutate(mutationAST);
+        //BERRemoval.mutate(mutationAST);
+        LRRelocation.mutate(mutationAST);
+        //LRRemoval.mutate(mutationAST);
         //LRRelocation.mutate(mutationAST);
         //System.out.println(LRR.mutate(mutationAST));
         //SVM.mutate(mutationAST);

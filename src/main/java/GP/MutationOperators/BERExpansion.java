@@ -3,10 +3,12 @@ package GP.MutationOperators;
 import java.util.*;
 import Util.MutationHelpers;
 import java.util.stream.Collectors;
+
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.CompilationUnit;
 
-public final class BERAddition {
+public final class BERExpansion {
     public static CompilationUnit mutate(CompilationUnit program) throws Exception {
         List<BinaryExpr> expressions = new ArrayList<>(program.findAll(BinaryExpr.class));
 
@@ -48,7 +50,6 @@ public final class BERAddition {
 
         // Normal binary expression
         } else {
-            System.out.println("BINARY EXPRESSION :PPPP");
             return getBinaryExpr(expression);
         }
     }
@@ -70,11 +71,29 @@ public final class BERAddition {
 
         // Pick at random a hashMap entry
         String randomType = (String) expressions.keySet().toArray()[MutationHelpers.randomIndex(expressions.keySet().size())];
-        System.out.println("RANDOM TYPE: " + randomType);
 
         // Assign newExpr
+        BinaryExpr.Operator[] relationalOperators = MutationHelpers.relationOperators;
+        System.out.println("TYPES: " + randomType);
+
+        // Deal with Boolean types by restricting the relational operators to: == and !=
+        if (randomType.equals("boolean")) {
+            relationalOperators = new BinaryExpr.Operator[] {BinaryExpr.Operator.EQUALS, BinaryExpr.Operator.NOT_EQUALS};
+
+        // Deal with String types separately
+        } else if (randomType.equals("java.lang.String")) {
+            // Use the .equals() method for string comparison, creating a method declaration to do this
+            MethodCallExpr mce = new MethodCallExpr();
+            mce.setScope(expressions.get(randomType).get(MutationHelpers.randomIndex(expressions.get(randomType).size())));
+            mce.setName("equals");
+            expressions.get(randomType).remove(mce.getScope());
+            mce.setArguments(new NodeList<>(expressions.get(randomType).get(MutationHelpers.randomIndex(expressions.get(randomType).size()))));
+
+            return mce;
+        }
+
         newExpr.setLeft(expressions.get(randomType).get(MutationHelpers.randomIndex(expressions.get(randomType).size())));
-        newExpr.setOperator(MutationHelpers.relationOperators[MutationHelpers.randomIndex(MutationHelpers.relationOperators.length)]);
+        newExpr.setOperator(relationalOperators[MutationHelpers.randomIndex(relationalOperators.length)]);
         expressions.get(randomType).remove(newExpr.getLeft());
         newExpr.setRight(expressions.get(randomType).get(MutationHelpers.randomIndex(expressions.get(randomType).size())));
 

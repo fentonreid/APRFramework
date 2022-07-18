@@ -1,15 +1,18 @@
-public class TestMutation {
-    public boolean lRelocation() {
-        switch (x) {
-            case 1:
-                System.out.println("1");
-            case 2:
-                System.out.println("2");
+public class Person {
+    int age = 20;
+
+    public String getAgeAsString() {
+        String ageString = null;
+        return ageString.toString();
+   }
+
+    public void main() {
+
+        try {
+            getAgeAsString();
+
+        } catch (Exception ex) {
+            throw new NullPointerException("Cannot cast properly");
         }
     }
-
-    public boolean test() {
-        System.out.println("TESTING");
-        System.out.println("TESTING 2");
-    }
-    }
+}
