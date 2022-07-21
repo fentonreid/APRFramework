@@ -199,7 +199,9 @@ public class TestGp {
 
     @Test
     @DisplayName("Population Size and Number Of Threads constraints")
-    public void testPopulationSizeAndNumberOfThreadsConstraints() throws Exception {
+    public void testPopulationSizeAndNumberOfThreadsConstraints() {
+        reinitialise();
+
         gpHashMap.put("populationSize", 5);
         gpHashMap.put("numberOfThreads", 20);
         assertThrows(Exception.class, () -> new Gp(gpHashMap)); // Throws population size is smaller than number of threads

@@ -68,7 +68,7 @@ public class TestDefects4J {
         selectionHashSet.put("Lang", identifiers);
         testCaseSelectionHashSet.put("selection", selectionHashSet);
 
-        assertThrows(NoSuchElementException.class, () -> new Defects4J(defects4jHashMap));
+        assertThrows(Exception.class, () -> new Defects4J(defects4jHashMap));
 
         /* Invalid :: Selection key is an invalid Defects4J project
             method: identifier
@@ -191,12 +191,10 @@ public class TestDefects4J {
          */
         int confirmedBugCount = 0;
 
-        ArrayList<String> identifiers = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "pids"});
-        assertNotNull(identifiers);
-        assertTrue(identifiers.size() >= 1);
+        HashMap<String, HashSet<Integer>> validBugs = new Defects4J().validBugs;
 
-        for (String identifier : identifiers) {
-            confirmedBugCount += ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "bids", "-p", identifier}).size();
+        for (String identifier : validBugs.keySet()) {
+            confirmedBugCount += validBugs.get(identifier).size();
         }
 
         // Get all Defects4J bugs
@@ -265,6 +263,6 @@ public class TestDefects4J {
         selectionHashSet.put("Lang", identifiers);
         testCaseSelectionHashSet.put("selection", selectionHashSet);
 
-        assertThrows(Exception.class, () -> new Defects4J(defects4jHashMap));
+        assertDoesNotThrow(() -> new Defects4J(defects4jHashMap));
     }
 }

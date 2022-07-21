@@ -20,7 +20,8 @@ public final class ProjectPaths {
         String pathToClasses = prop.getProperty("d4j.dir.src.classes");
 
         // Ensure properties are not null, the modified class has a length of one, relevant bugs include the modified bug, srcPath + modifiedBug exists
-        if (modifiedClass == null || pathToClasses == null) { throw new NullPointerException("Could not read 'defects4j.build.properties' file correctly"); }
+        if (modifiedClass == null || pathToClasses == null) {
+            throw new NullPointerException("Could not read 'defects4j.build.properties' file correctly"); }
 
         Path modifiedClassPath = Paths.get("/" + pathToClasses + "/" + modifiedClass.replaceAll("\\.", File.separator) + ".java");
         if(!Files.exists(Paths.get(checkoutPath + modifiedClassPath))) { throw new Exception("Could not find the modified class path '" + modifiedClassPath +"'"); }
@@ -30,13 +31,6 @@ public final class ProjectPaths {
 
     public static Path getFixedProgramPath(String identifier, int bid) throws Exception {
         Path patchPath = Paths.get("/defects4j/framework/projects/" + identifier + "/patches/" + bid + ".src.patch");
-        if(!Files.exists(patchPath)) { throw new IOException("Could not find the patch file at '" + patchPath + "'"); }
-
-        return patchPath;
-    }
-
-    public static Path getFixedTestPath(String identifier, int bid) throws Exception {
-        Path patchPath = Paths.get("/defects4j/framework/projects/" + identifier + "/patches/" + bid + ".test.patch");
         if(!Files.exists(patchPath)) { throw new IOException("Could not find the patch file at '" + patchPath + "'"); }
 
         return patchPath;

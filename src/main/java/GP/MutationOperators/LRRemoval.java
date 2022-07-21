@@ -20,8 +20,12 @@ public final class LRRemoval {
                 // Collect the try statement, catch statements and finally statements
                 List<Node> tryNodes = new ArrayList<>();
                 tryNodes.add(tryStmt.getTryBlock());
-                tryNodes.addAll(tryStmt.getCatchClauses());
-                tryStmt.getFinallyBlock().ifPresent(tryNodes::add);
+
+                // If the program has more than one catch block or has a finally block then we can remove a catch block
+                if (tryStmt.getCatchClauses().size() > 1 || tryStmt.getFinallyBlock().isPresent()) {
+                    tryNodes.addAll(tryStmt.getCatchClauses());
+                    tryStmt.getFinallyBlock().ifPresent(tryNodes::add);
+                }
 
                 Node removeTryNode = tryNodes.get(MutationHelpers.randomIndex(tryNodes.size()));
                 removeTryNode.removeForced();
@@ -30,8 +34,8 @@ public final class LRRemoval {
             case "IfStmt":
                 IfStmt ifStmt = (IfStmt) removeNode;
 
-                // If an else statement exists then there is a 50% chance the else statement will be removed
-                if (ifStmt.hasElseBranch() && Math.random() < 0.5) {
+                // If an else statement exists then the else statement will be removed
+                if (ifStmt.hasElseBranch()) {
                     ifStmt.removeElseStmt();
                 } else {
                     removeNode.removeForced();

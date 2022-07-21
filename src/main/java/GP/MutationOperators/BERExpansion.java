@@ -1,32 +1,22 @@
 package GP.MutationOperators;
 
 import java.util.*;
+import GP.GP.UnmodifiedProgramException;
 import Util.MutationHelpers;
 import java.util.stream.Collectors;
-
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
-import com.github.javaparser.ast.body.FieldDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.stmt.IfStmt;
-import com.github.javaparser.ast.stmt.ReturnStmt;
-import com.github.javaparser.ast.stmt.WhileStmt;
-
-import static Util.MutationHelpers.collectStatementExpressions;
 
 public final class BERExpansion {
-    public static CompilationUnit mutate(CompilationUnit program) throws Exception {
-        List<Expression> expressions = new ArrayList<>(collectStatementExpressions(program));
-        if (expressions.size() == 0) { throw new Exception("No valid binary expression was found"); }
-        System.out.println("Expressions: " + expressions);
+    public static CompilationUnit mutate(CompilationUnit program) throws UnmodifiedProgramException {
+        List<Expression> expressions = new ArrayList<>(MutationHelpers.collectStatementExpressions(program));
+        if (expressions.size() == 0) { throw new UnmodifiedProgramException("No valid binary expression was found"); }
 
         // Pick a random expression from the expression list and get the children of that expression
         List<Node> children = MutationHelpers.getChildrenOfExpression(expressions.get(MutationHelpers.randomIndex(expressions.size())));
         Node randomExpression = children.get(MutationHelpers.randomIndex(children.size()));
-
-        System.out.println("CHILDREN of " + randomExpression + " are these" + children);
 
         // Add at random a new binary expression to either the left or right-hand side of the child expression
         BinaryExpr resultingExpression;
@@ -42,7 +32,7 @@ public final class BERExpansion {
         return program.clone();
     }
 
-    public static Expression generateExpression(Expression expression) throws Exception {
+    public static Expression generateExpression(Expression expression) throws UnmodifiedProgramException {
         double randomState = Math.random();
 
         // Add a single expression with or without negation
@@ -55,27 +45,29 @@ public final class BERExpansion {
         }
     }
 
-    private static Expression getSingleNameExpression(Expression randomExpression) {
+    private static Expression getSingleNameExpression(Expression randomExpression) throws UnmodifiedProgramException {
+        // Collect boolean and String types in scope
         List<Expression> booleanTypes = MutationHelpers.resolveCollection(randomExpression, "boolean");
 
-        if (booleanTypes.size() > 0)  return booleanTypes.get(MutationHelpers.randomIndex(booleanTypes.size()));
-        throw new NullPointerException("No `Valid Boolean Types` found in the Compilation Unit");
+        if (booleanTypes.size() == 0) { throw new UnmodifiedProgramException("No `Valid Boolean Types` found in the Compilation Unit"); }
+
+        // Get a random expression
+        return booleanTypes.get(MutationHelpers.randomIndex(booleanTypes.size()));
     }
 
-    private static Expression getBinaryExpr(Expression expression) {
+    private static Expression getBinaryExpr(Expression expression) throws UnmodifiedProgramException {
         BinaryExpr newExpr =  new BinaryExpr();
         HashMap<String, List<Expression>> expressions = MutationHelpers.resolveAllTypes(expression);
 
         // Remove types which have less than two nodes available
         expressions.entrySet().stream().filter(entry->entry.getValue().size() < 2).map(Map.Entry::getKey).collect(Collectors.toList()).forEach(expressions.keySet()::remove);
-        if (expressions.size() == 0) { throw new NullPointerException("Could not find any allowed nodes in the Compilation Unit"); }
+        if (expressions.size() == 0) { throw new UnmodifiedProgramException("Could not find any allowed nodes in the Compilation Unit"); }
 
         // Pick at random a hashMap entry
         String randomType = (String) expressions.keySet().toArray()[MutationHelpers.randomIndex(expressions.keySet().size())];
 
         // Assign newExpr
         BinaryExpr.Operator[] relationalOperators = MutationHelpers.relationOperators;
-        System.out.println("TYPES: " + randomType);
 
         // Deal with Boolean types by restricting the relational operators to: == and !=
         if (randomType.equals("boolean")) {
@@ -83,11 +75,12 @@ public final class BERExpansion {
 
         // Deal with String types separately
         } else if (randomType.equals("java.lang.String")) {
-            // Use the .equals() method for string comparison, creating a method declaration to do this
+            // A string comparison method is chosen at random
             MethodCallExpr mce = new MethodCallExpr();
-            mce.setScope(expressions.get(randomType).get(MutationHelpers.randomIndex(expressions.get(randomType).size())));
-            mce.setName("equals");
-            expressions.get(randomType).remove(mce.getScope());
+            Expression randomExpression = expressions.get(randomType).get(MutationHelpers.randomIndex(expressions.get(randomType).size()));
+            mce.setScope(randomExpression);
+            mce.setName(MutationHelpers.binaryExpressionAllowedMethods[MutationHelpers.randomIndex(MutationHelpers.binaryExpressionAllowedMethods.length)]);
+            expressions.get(randomType).remove(randomExpression);
             mce.setArguments(new NodeList<>(expressions.get(randomType).get(MutationHelpers.randomIndex(expressions.get(randomType).size()))));
 
             return mce;

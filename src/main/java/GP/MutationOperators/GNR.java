@@ -1,30 +1,28 @@
 package GP.MutationOperators;
 
+import GP.GP.UnmodifiedProgramException;
 import Util.MutationHelpers;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.*;
+import com.github.javaparser.ast.stmt.ReturnStmt;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
-public final class SVM {
-    public static CompilationUnit mutate(CompilationUnit program) throws Exception {
-        /* (1) -- Collect all listed nodes from the compilation unit */
-        // - Variable Declarations
-        // - Method Calls
-        // - Object Instantiations
-        // - Field Access Call
+public final class GNR {
+
+    public static CompilationUnit mutate(CompilationUnit program) throws UnmodifiedProgramException {
+        // Collect all listed nodes from the compilation unit
         List<Node> nodes = new ArrayList<>(collectExpressions(program));
 
-        /* (2) -- Get random node from subset */
-        if (nodes.size() == 0) { throw new Exception("None of the required nodes could be found in the Compilation Unit"); }
+        // Get random node from subset
+        if (nodes.size() == 0) { throw new UnmodifiedProgramException("None of the required nodes could be found in the Compilation Unit"); }
         Node nodeFrom = nodes.get(MutationHelpers.randomIndex(nodes.size()));
-        System.out.println("Single node: " + nodeFrom);
         Node nodeTo = null;
 
-        /* (3) -- Determine the node to change to */
-        System.out.println(nodeFrom.getClass().getSimpleName());
+        // Determine the node to change to
         List<Expression> expressions;
         switch (nodeFrom.getClass().getSimpleName()) {
             case "VariableDeclarator":
@@ -33,7 +31,6 @@ public final class SVM {
                 break;
 
             case "MethodCallExpr":
-                System.out.println(((MethodCallExpr) nodeFrom).resolve().getReturnType().describe());
                 expressions = MutationHelpers.resolveCollection(nodeFrom, ((MethodCallExpr) nodeFrom).resolve().getReturnType().describe());
                 if (expressions.size() > 0) { nodeTo = expressions.get(MutationHelpers.randomIndex(expressions.size())); }
                 break;
@@ -47,23 +44,35 @@ public final class SVM {
                 expressions = MutationHelpers.resolveCollection(nodeFrom, ((FieldAccessExpr) nodeFrom).resolve().getType().describe());
                 if (expressions.size() > 0) { nodeTo = expressions.get(MutationHelpers.randomIndex(expressions.size())); }
                 break;
+
+            case "ReturnStmt":
+                String type = ((ReturnStmt) nodeFrom).getExpression().isPresent()? ((ReturnStmt) nodeFrom).getExpression().get().calculateResolvedType().describe() : null;
+
+                if (type == null) {
+                    if (nodeFrom.findAncestor(MethodDeclaration.class).isPresent())
+                        type = nodeFrom.findAncestor(MethodDeclaration.class).get().resolve().getReturnType().describe();
+                    else
+                        throw new UnmodifiedProgramException("Could not get type of return statement");
+                }
+
+                expressions = MutationHelpers.resolveCollection(nodeFrom, type);
+                if (expressions.size() > 0) { nodeTo =  ((ReturnStmt) nodeFrom).setExpression(expressions.get(MutationHelpers.randomIndex(expressions.size()))); }
         }
 
         if(nodeTo != null) { nodeFrom.replace(nodeTo); }
 
-        /* Print and return */
         System.out.println(program);
         return program.clone();
     }
 
     private static List<Node> collectExpressions(CompilationUnit cu) {
         List<Node> nodes = new ArrayList<>();
-        //nodes.addAll(cu.findAll(MethodCallExpr.class));
-        //nodes.addAll(cu.findAll(FieldAccessExpr.class));
-        //nodes.addAll(cu.findAll(ObjectCreationExpr.class));
-        //nodes.addAll(cu.findAll(VariableDeclarator.class));
+        nodes.addAll(cu.findAll(MethodCallExpr.class));
+        nodes.addAll(cu.findAll(FieldAccessExpr.class));
+        nodes.addAll(cu.findAll(ObjectCreationExpr.class));
+        nodes.addAll(cu.findAll(VariableDeclarator.class));
+        nodes.addAll(cu.findAll(ReturnStmt.class));
 
-        System.out.println("NODES COLLECTED: " + nodes);
         return nodes;
     }
 }

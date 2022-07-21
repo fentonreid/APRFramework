@@ -17,6 +17,7 @@ public final class MutationHelpers {
     public static final BinaryExpr.Operator[] relationOperators = new BinaryExpr.Operator[]{ BinaryExpr.Operator.LESS, BinaryExpr.Operator.LESS_EQUALS, BinaryExpr.Operator.GREATER, BinaryExpr.Operator.GREATER_EQUALS, BinaryExpr.Operator.EQUALS, BinaryExpr.Operator.NOT_EQUALS };
     public static final BinaryExpr.Operator[] booleanOperators  = new BinaryExpr.Operator[]{ BinaryExpr.Operator.OR, BinaryExpr.Operator.AND};
     public static final UnaryExpr.Operator[] unaryOperators  = new UnaryExpr.Operator[]{ UnaryExpr.Operator.LOGICAL_COMPLEMENT};
+    public static final String[] binaryExpressionAllowedMethods = new String[] { "contains", "startsWith", "endsWith", "equalsIgnoreCase"};
 
     public static int randomIndex(int size) {
         if (size == 1) return 0;
@@ -77,7 +78,6 @@ public final class MutationHelpers {
         expressions.addAll(resolveObjectCreationExpr(node, resolvedType));
         expressions.addAll(resolveFieldAccessExpr(node, resolvedType));
 
-        System.out.println("EXPRESSIONS: " + expressions);
         return expressions;
     }
 
@@ -317,7 +317,6 @@ public final class MutationHelpers {
     public static List<Expression> collectStatementExpressions(CompilationUnit cu) {
         List<Expression> expressions = new ArrayList<>();
 
-        // Could add return statement thing?
         // Collect if, while and ternary expressions
         cu.findAll(IfStmt.class).forEach(stmt -> expressions.add(stmt.getCondition()));
         cu.findAll(WhileStmt.class).forEach(stmt -> expressions.add(stmt.getCondition()));

@@ -3,7 +3,7 @@ gp:
   populationSize: 1
   mutationRate: 1
   mutationOperators:
-    - MutationOperator1
+    - GNR
   iterationsPerBug: 1
   numberOfThreads: 1 # (2 works best for this laptop)
 
@@ -22,5 +22,6 @@ defects4j:
 output:
   csv: summary
   javadoc: false
-  patches: false
+  uploadToPatchViewer: false
+  uploadToGeneratePatches: false
   gp: false

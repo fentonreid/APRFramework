@@ -79,14 +79,17 @@ public class Defects4J {
             ArrayList<String> bugProperties = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "query", "-p", identifier, "-q", "bug.id,classes.modified,classes.relevant.src"});
 
             for (String property : bugProperties) {
-                String[] split = property.split(",");
-                assert (split.length == 3);
 
-                String modifiedClass = split[1].substring(1,split[1].length()-1);
+                String[] split = property.split(",");
+
+                if (split.length != 3) { continue; }
+
+                String modifiedClass = split[1].replaceAll("\"", ""); //.substring(1,split[1].length()-1);
                 String relevantClasses = split[2];
 
-                if (modifiedClass.split(",").length > 1) { break; }
-                if (!relevantClasses.contains(modifiedClass)) { break; }
+                // Ensure the number of modified classes to achieve the patch is one
+                if (modifiedClass.split(";").length > 1) { continue; }
+                if (!relevantClasses.contains(modifiedClass)) { continue; }
 
                 bids.add(Integer.valueOf(split[0]));
             }

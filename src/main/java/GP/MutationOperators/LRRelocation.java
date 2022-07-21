@@ -1,5 +1,6 @@
 package GP.MutationOperators;
 
+import GP.GP.UnmodifiedProgramException;
 import Util.MutationHelpers;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
@@ -11,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class LRRelocation {
-    public static CompilationUnit mutate(CompilationUnit program) throws Exception {
+    public static CompilationUnit mutate(CompilationUnit program) throws UnmodifiedProgramException {
         List<Class<?>> allowedTypes = new ArrayList<>(LRR.getAllowedNodes());
         allowedTypes.remove(SwitchEntry.class);
         allowedTypes.remove(FieldDeclaration.class);
@@ -22,7 +23,7 @@ public final class LRRelocation {
         allowedTypes.add(SwitchStmt.class);
 
         List<Node> nodes = nodeCollector(program, allowedTypes);
-        if (nodes == null || nodes.size() < 1) { throw new Exception("No acceptable nodes found in this program"); }
+        if (nodes == null || nodes.size() < 2) { throw new UnmodifiedProgramException("Less than two acceptable nodes found in the program"); }
 
         // Take a random node
         Node nodeFrom = nodes.get(MutationHelpers.randomIndex(nodes.size()));
@@ -31,9 +32,6 @@ public final class LRRelocation {
         // Take another node in the program
         Node nodeTo = nodes.get(MutationHelpers.randomIndex(nodes.size()));
 
-        System.out.println("NODE FROM: " + nodeFrom);
-        System.out.println("NODE TO: " + nodeTo);
-
         // If the parent of the node to insert before is not part of a block statement then the original program is returned as a block statement is needed
         if (!nodeTo.findAncestor(BlockStmt.class).isPresent()) { return program.clone(); }
 
@@ -41,7 +39,6 @@ public final class LRRelocation {
         nodeToBlock.getStatements().addBefore((Statement) nodeFrom.clone(), (Statement) nodeTo.clone());
         nodeFrom.removeForced();
 
-        System.out.println(program);
         return program.clone();
     }
 
@@ -59,7 +56,7 @@ public final class LRRelocation {
 
             if (nodeList.size() > 1) { methodNodes.add(nodeList); }
         });
-
+        
         if (methodNodes.size() > 1) { return methodNodes.get(MutationHelpers.randomIndex(methodNodes.size())); }
 
         return null;

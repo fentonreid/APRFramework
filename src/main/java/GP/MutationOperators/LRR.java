@@ -1,8 +1,10 @@
 package GP.MutationOperators;
 
+import GP.GP.UnmodifiedProgramException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.LambdaExpr;
 import com.github.javaparser.ast.expr.MarkerAnnotationExpr;
@@ -11,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class LRR {
-    public static CompilationUnit mutate(CompilationUnit program) throws Exception {
+    public static CompilationUnit mutate(CompilationUnit program) throws UnmodifiedProgramException {
         // Remove
         if (Math.random() < 0.5) { return LRRemoval.mutate(program); }
 
@@ -37,6 +39,7 @@ public final class LRR {
         allowedNodeTypes.add(SwitchEntry.class);
         allowedNodeTypes.add(ThrowStmt.class);
         allowedNodeTypes.add(WhileStmt.class);
+        allowedNodeTypes.add(MethodDeclaration.class);
 
         return allowedNodeTypes;
     }

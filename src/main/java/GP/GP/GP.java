@@ -2,15 +2,12 @@ package GP.GP;
 
 import Util.CSVOutput;
 import com.github.javaparser.ast.CompilationUnit;
-import GP.GP.GPThread;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import Util.ParserRunner;
-import Util.ProjectPaths;
 import Util.ShellProcessBuilder;
 
 public final class GP {

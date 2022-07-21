@@ -19,12 +19,14 @@ public final class ShellProcessBuilder {
             throw new Exception("The command passed is empty or contains null, consult the defects4j github examples for valid command user or man pages is using a bash command");
         } catch (IOException ex) {
             throw new Exception("An input/output error has occurred " + ex);
+        } catch (Exception ex) {
+            throw new Exception("Another exception has been raised");
         }
     }
 
     public static Process runCommand(String[] command, File workingDirectory) throws Exception {
         try {
-            ProcessBuilder ps = new ProcessBuilder(command);
+            ProcessBuilder ps = new ProcessBuilder(command).inheritIO();
             ps.directory(workingDirectory);
 
             return ps.start();
@@ -34,7 +36,7 @@ public final class ShellProcessBuilder {
         } catch (IOException ex) {
             throw new Exception("An input/output error has occurred " + ex);
         } catch (Exception ex) {
-            throw new Exception("OTHER ISSUE " + ex);
+            throw new Exception("Another exception has been raised " + ex);
         }
     }
 

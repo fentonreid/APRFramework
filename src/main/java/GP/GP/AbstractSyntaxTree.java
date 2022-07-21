@@ -25,6 +25,7 @@ public final class AbstractSyntaxTree {
             StaticJavaParser.getConfiguration().setSymbolResolver(new JavaSymbolSolver(new ReflectionTypeSolver()));
 
             return StaticJavaParser.parse(buggyFile);
+
         } catch (FileNotFoundException ex) { throw new Exception("Location of buggy file '" + buggyFile +"' could not be found"); }
     }
 }

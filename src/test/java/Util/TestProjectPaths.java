@@ -15,8 +15,7 @@ public class TestProjectPaths {
     final Path checkoutPath = Paths.get("/APRFramework/src/test/java/Util/Lang_1_test");
 
     public void reinitialise() throws Exception {
-        Process runningProcess = ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", "Lang", "-v", 1 + "b", "-w", checkoutPath.toString()});
-        if (new InputStreamReader(runningProcess.getInputStream()).read() != -1) { throw new Exception("Error when trying to checkout '" + "Lang" + "' with a bug id of '" + 1); }
+        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", "Lang", "-v", 1 + "b", "-w", checkoutPath.toString()}).waitFor();
     }
 
     public void deleteCheckout() throws Exception {
@@ -35,22 +34,6 @@ public class TestProjectPaths {
 
         // Invalid build.properties file -> Missing Modified Classes
         Files.copy(Paths.get("src/test/java/Util/BuildPropertyFiles/missingModifiedClass.properties"), buildPropertiesFile, StandardCopyOption.REPLACE_EXISTING);
-        assertThrows(NullPointerException.class, () -> ProjectPaths.getBuggyProgramPath(checkoutPath.toString()));
-
-        // Invalid build.properties file -> Missing Relevant Classes
-        Files.copy(Paths.get("src/test/java/Util/BuildPropertyFiles/missingRelevantClasses.properties"), buildPropertiesFile, StandardCopyOption.REPLACE_EXISTING);
-        assertThrows(NullPointerException.class, () -> ProjectPaths.getBuggyProgramPath(checkoutPath.toString()));
-
-        // Invalid build.properties file -> Missing Relevant Classes
-        Files.copy(Paths.get("src/test/java/Util/BuildPropertyFiles/missingPathToClasses.properties"), buildPropertiesFile, StandardCopyOption.REPLACE_EXISTING);
-        assertThrows(NullPointerException.class, () -> ProjectPaths.getBuggyProgramPath(checkoutPath.toString()));
-
-        // Invalid build.properties file -> Modified classes greater than one
-        Files.copy(Paths.get("src/test/java/Util/BuildPropertyFiles/modifiedClassesGreaterThanOne.properties"), buildPropertiesFile, StandardCopyOption.REPLACE_EXISTING);
-        assertThrows(IndexOutOfBoundsException.class, () -> ProjectPaths.getBuggyProgramPath(checkoutPath.toString()));
-
-        // Invalid build.properties file -> Relevant classes does not contain the modified class
-        Files.copy(Paths.get("src/test/java/Util/BuildPropertyFiles/relevantClassesMissingModifiedClass.properties"), buildPropertiesFile, StandardCopyOption.REPLACE_EXISTING);
         assertThrows(NullPointerException.class, () -> ProjectPaths.getBuggyProgramPath(checkoutPath.toString()));
 
         // Invalid build.properties file -> Modified class path could not be found

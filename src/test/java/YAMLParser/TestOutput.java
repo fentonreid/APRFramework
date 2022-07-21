@@ -1,8 +1,6 @@
 package YAMLParser;
 
 import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import java.util.LinkedHashMap;
@@ -14,7 +12,8 @@ public class TestOutput {
         outputHashMap = new LinkedHashMap<>();
         outputHashMap.put("csv", "summary");
         outputHashMap.put("javadoc", true);
-        outputHashMap.put("patches", true);
+        outputHashMap.put("uploadToPatchViewer", true);
+        outputHashMap.put("uploadToGeneratePatches", true);
     }
 
     @Test
@@ -43,15 +42,28 @@ public class TestOutput {
     }
 
     @Test
-    @DisplayName("Patches")
-    public void testPatches() throws Exception {
+    @DisplayName("Upload to patch viewer")
+    public void testPatchViewer() throws Exception {
         reinitialise();
-        assertEquals(new Output(outputHashMap).patches, true); // Assert property was assigned
+        assertEquals(new Output(outputHashMap).uploadToPatchViewer, true); // Assert property was assigned
 
-        outputHashMap.remove("patches"); // Do not throw when property does not exist
+        outputHashMap.remove("uploadToPatchViewer"); // Do not throw when property does not exist
         assertDoesNotThrow(() -> new Output(outputHashMap));
 
-        outputHashMap.put("patches", "true"); // Throws is not of type Boolean
+        outputHashMap.put("uploadToPatchViewer", "true"); // Throws is not of type Boolean
+        assertThrows(Exception.class, () -> new Output(outputHashMap));
+    }
+
+    @Test
+    @DisplayName("Upload to generated patches")
+    public void testGeneratedPatches() throws Exception {
+        reinitialise();
+        assertEquals(new Output(outputHashMap).uploadToGeneratePatches, true); // Assert property was assigned
+
+        outputHashMap.remove("uploadToGeneratePatches"); // Do not throw when property does not exist
+        assertDoesNotThrow(() -> new Output(outputHashMap));
+
+        outputHashMap.put("uploadToGeneratePatches", "true"); // Throws is not of type Boolean
         assertThrows(Exception.class, () -> new Output(outputHashMap));
     }
 }
