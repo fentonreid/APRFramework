@@ -6,6 +6,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
+/**
+ * The Gp class validates the YAML GP properties.
+ */
 @SuppressWarnings("unchecked")
 public class Gp {
     public int generations;
@@ -13,13 +16,24 @@ public class Gp {
     public double mutationRate;
     public ArrayList<String> mutationOperators = new ArrayList<>();
     public int iterationsPerBug;
-
     public int numberOfThreads;
 
+    /**
+     * Class constructor parsing the given LinkedHashMap.
+     *
+     * @exception Exception HashMap could not be assigned
+     */
     public Gp(LinkedHashMap<String, Object> gpHashMap) throws Exception {
         parse(gpHashMap);
     }
 
+    /**
+     * Parse method ensures presence and correct instance types of YAML properties for the GP object.
+     * Constraint validation of specific properties such as population size are performed.
+     *
+     * @param gpHashMap         GP YAML object from config
+     * @exception Exception     If gpHashMap is missing a property or is of the wrong type
+     */
     public void parse(LinkedHashMap<String, Object> gpHashMap) throws Exception {
         if (!gpHashMap.containsKey("generations")) { throw new Exception("'generations' property is missing in the config.yml 'gp' object "); }
         if (!(gpHashMap.get("generations") instanceof Integer)) { throw new Exception("'generations' property must be an integer"); }
@@ -71,7 +85,9 @@ public class Gp {
     }
 
     /**
-     * Get all classes that implement the MutationOperator abstract class and set the mutationOperators field
+     * Get all classes that are present in the GP.MutationOperators package that implement a Mutate method.
+     *
+     * @exception Exception If process builder call to execute Defects4j command fails
      */
     public void getAllMutationOperators() throws Exception {
         // Get all class files in GP/MutationOperators directory
@@ -95,9 +111,10 @@ public class Gp {
     }
 
     /**
-     * Given an Arraylist of mutation operators class names check to ensure that they implement the MutationOperator abstract class
-     * @param selectedOperators Arraylist of mutation operator class names parsed from config.yml
-     * @throws ClassNotFoundException Throws if the given mutation operator class does not exist or does not implement MutationOperator abstract class
+     * Given an Arraylist of mutation operators class names check to ensure that they all implement a mutate method.
+     *
+     * @param selectedOperators         Arraylist of mutation operator class names parsed from config.yml
+     * @throws ClassNotFoundException   Throws if the given mutation operator class does not exist or does not implement a mutate method
      **/
     public void getSelectedMutationOperators(ArrayList<String> selectedOperators) throws Exception {
         for (String mutationOperator : selectedOperators) {

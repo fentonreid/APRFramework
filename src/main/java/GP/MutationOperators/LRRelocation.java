@@ -11,7 +11,23 @@ import com.github.javaparser.ast.stmt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The LRRelocation mutation is a child of the Line Relocation and Removal (LRR) mutation, with the goal of moving statements in the same method around.<br>
+ * Variable declarations, method calls, if, while, do-while, for, try and switch statements, and throw statements can all be moved.
+ */
 public final class LRRelocation {
+
+    /**
+     * (1) Collect from the program all nodes that are specified in the LRR 'getAllowedNodes()' method, for this mutation this list is modified by the mutation to remove Switch entries, Field declarations and a few others<br>
+     * (2) Two unique nodes are selected from the program that comply to the allowed nodes, if two unique nodes cannot be found then the program is returned unmodified<br>
+     * (3) The second node with the name of 'nodeTo' which is the location nodeFrom will relocate to, does not have a block statement ancestor then the program is returned as the mutation requires a block statement for relocation<br>
+     * (4) NodeFrom is copied above nodeTo using the 'addBefore()' method that BlockStmt provides, and the original nodeFrom is removed<br>
+     * (5) The modified program is then returned
+     *
+     * @param program                           The AST representation of the program to mutate
+     * @return                                  The mutated program is returned
+     * @throws UnmodifiedProgramException       If the chosen mutation fails to mutate the program with a known reason
+     */
     public static CompilationUnit mutate(CompilationUnit program) throws UnmodifiedProgramException {
         List<Class<?>> allowedTypes = new ArrayList<>(LRR.getAllowedNodes());
         allowedTypes.remove(SwitchEntry.class);
@@ -42,6 +58,13 @@ public final class LRRelocation {
         return program.clone();
     }
 
+    /**
+     * Collects all allowed nodes from the program as defined in the LRR getAllowedNodes() method that have at least two types.
+     *
+     * @param cu                    The AST representation of the current program
+     * @param allowedNodeTypes      The name of the type that is to be collected from the program
+     * @return                      A list of nodes from the program that are allowed from the LRR allowedNodes definition
+     */
     public static List<Node> nodeCollector(CompilationUnit cu, List<Class<?>> allowedNodeTypes) {
         List<List<Node>> methodNodes = new ArrayList<>();
 

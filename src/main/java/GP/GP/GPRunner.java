@@ -1,21 +1,30 @@
 package GP.GP;
 
-import Util.CSVOutput;
-import Util.ProjectPaths;
+import Util.*;
 import com.github.javaparser.ast.CompilationUnit;
-import Util.ShellProcessBuilder;
 import java.io.File;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import Util.ParserRunner;
 import org.apache.commons.io.FileUtils;
 
+/**
+ * The GPRunner class ensures the correct execution of the GP based on the parameters passed by an individual from the YAML configuration file.
+ * For each Defects4j bug selected the GP is run a certain number of iterations for each mutation operator selected and a summary csv, Defects4j patch and generated GP patches are saved to the /output folder.
+ */
 public final class GPRunner {
+
+    /**
+     * The Genetic program for each mutation operator for each number of iterations is performed.
+     * The compile and test times are recorded and any generated patches are uploaded to the Vue website.
+     * Furthermore, the bug output is saved to the /output folder with a summary of the GP hyper-parameters and iteration details for each mutation operator generated also
+     *
+     * @throws Exception The Defects4j bug could not be checked out or the generated patch could not be uploaded to Firebase
+     */
     public static void main() throws Exception {
         long startCompileTime = 0;
         long endCompileTime = 0;
@@ -54,27 +63,44 @@ public final class GPRunner {
 
                 String checkoutPath = checkoutFolderBase + "1";
 
-                // Get the number of test cases
-                int numberOfTestCases = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "export", "-p", "tests.relevant", "-w", checkoutPath}).size();
-                int numberOfTotalTestCases = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "export", "-p", "tests.all", "-w", checkoutPath}).size();
+                int numberOfTestClasses = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "export", "-p", "tests.relevant", "-w", checkoutPath}).size();
+                int numberOfTotalTestClasses = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "export", "-p", "tests.all", "-w", checkoutPath}).size();
 
                 // Adding general details to CSVOutput
-                CSVOutput.addGeneralDetailsEntry(CSVOutput.formatTime(startCompileTime/2, endCompileTime/2), CSVOutput.formatTime(startTestTime/2, endTestTime/2), numberOfTestCases, numberOfTotalTestCases);
+                CSVOutput.addGeneralDetailsEntry(CSVOutput.formatTime(startCompileTime/2, endCompileTime/2), CSVOutput.formatTime(startTestTime/2, endTestTime/2), numberOfTestClasses, numberOfTotalTestClasses);
 
-                // Get the buggy file and save as AST representation
+                // Get the buggy file and source directory for symbol resolving and save as AST representation
                 Path buggyFilePath = ProjectPaths.getBuggyProgramPath(checkoutPath);
-                CompilationUnit buggyAST = AbstractSyntaxTree.generateAST(Paths.get(checkoutPath + buggyFilePath));
-                
+                String sourceDirectory = ProjectPaths.getSourceDirectoryPath(checkoutPath);
+
                 for (String mutationOperator : ParserRunner.gp.mutationOperators) {
                     ArrayList<CompilationUnit> patches = new ArrayList<>();
 
                     for (int i = 1; i <= ParserRunner.gp.iterationsPerBug; i++) {
                         long startIterationTime = System.nanoTime();
-                        ArrayList<CompilationUnit> currentIterationPatches = new GP(buggyAST, Class.forName("GP.MutationOperators." + mutationOperator), numberOfTestCases, checkoutFolderBase, buggyFilePath.toString()).main();
-                        if(currentIterationPatches.size() > 0) { patches.addAll(currentIterationPatches); }
+                        CompilationUnit buggyAST = AbstractSyntaxTree.generateAST(Paths.get(checkoutPath + buggyFilePath), sourceDirectory);
+
+                        CompilationUnit currentIterationPatch = new GP(buggyAST, Class.forName("GP.MutationOperators." + mutationOperator), checkoutFolderBase, buggyFilePath.toString()).main();
+                        if (currentIterationPatch != null) {
+                            patches.add(currentIterationPatch);
+
+                            // Prepare parameters for JSON payload to firebase
+                            Map<String, Object> params = new HashMap<>();
+                            params.put("patchId", patches.size());
+                            params.put("identifier", identifier);
+                            params.put("bid", bid);
+                            params.put("actualPatch", currentIterationPatch.toString().replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r"));
+                            // This has to change :p
+                            params.put("gpPatch", FileUtils.readFileToString(ProjectPaths.getFixedProgramPath(identifier, bid).toFile(), "UTF-8").replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r"));
+                            params.put("overfitness", "Unassigned");
+
+                            // Upload patch to Firebase
+                            try { Firebase.UploadPatchToFirebase("generatedpatches.json", params); }
+                            catch (Exception ex) { System.out.println("Failed to upload generated patch to firebase: " + identifier + " " + bid); }
+                        }
                         long endIterationTime = System.nanoTime();
 
-                        CSVOutput.addIterationBreakdownEntry(i, mutationOperator, currentIterationPatches.size(), CSVOutput.formatTime(startIterationTime, endIterationTime));
+                        CSVOutput.addIterationBreakdownEntry(i, mutationOperator, 1, CSVOutput.formatTime(startIterationTime, endIterationTime));
                     }
 
                     // Copy patches for the current bug into /output/{identifier}_{bid}/{mutationOperator}/{patchNumber}

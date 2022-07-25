@@ -7,7 +7,31 @@ import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.expr.*;
 import java.util.*;
 
+/**
+ * The Boolean Expression Modification (BEM) mutation is a child of the Boolean And Relational (BAR) mutation, with the goal of switching the boolean and relational operators of expressions<br>
+ * and adding and removing negation to child expressions.<br><br>
+ * Expressions found in if, while and ternary statements are collected with boolean variables and fields and boolean return types collected also.
+ */
 public final class BEM {
+
+    /**
+     * (1) Boolean expressions in the program are collected, for example (x > 5 && y > 5)<br>
+     * (2) If a valid expression could not be found then return the program unmodified<br>
+     * (3) A random expression from the list of available expressions is chosen and different actions are taken depending on the instance type<br>
+     * (4) If the expression is a Unary expression then remove the unary expression and get the expression inside<br>
+     * (5) If the expression is a Binary expression then the mutation has two options<br>
+     *  (5.1) 50% chance to modify the binary expressions operator<br>
+     *   (5.1.1) Generally, if the current operator of the expression is a boolean operator (&&, ||) then a random boolean operator is chosen<br>
+     *   (5.1.2) Generally, if the current operator of the expression is a relational operator (!=, <=, ...) then a random relational operator is chosen<br>
+     *   (5.1.3) If the binary expression is a string then .equals() is used for the relational operator and if a boolean then the relational operators are limited to == and !=<br>
+     *  (5.2) 50% chance to enclose the expression in a negation operator<br>
+     * (6) If the expression is a BooleanLiteralExpr e.g. a 'true' or 'false' value then the boolean literal is flipped<br>
+     * (7) The modified program is returned
+     *
+     * @param program                           The AST representation of the program to mutate
+     * @return                                  The mutated program is returned
+     * @throws UnmodifiedProgramException       If the chosen mutation fails to mutate the program with a known reason
+     */
     public static CompilationUnit mutate(CompilationUnit program) throws UnmodifiedProgramException {
         List<Expression> expressions = new ArrayList<>(MutationHelpers.collectStatementExpressions(program));
 
@@ -74,10 +98,15 @@ public final class BEM {
                 randomExpression.replace(new UnaryExpr().setOperator(UnaryExpr.Operator.LOGICAL_COMPLEMENT).setExpression(randomExpression.clone()));
         }
 
-        System.out.println(program);
         return program.clone();
     }
 
+    /**
+     * Returns if the given operator appears in the relational operators array. Useful to determine if a binary expression is a child node or not.
+     *
+     * @param operator  The given operator of an expression
+     * @return          If the operator is present in the relational operators array or not
+     */
     private static boolean containsRelationOperator(BinaryExpr.Operator operator) {
         return Arrays.asList(MutationHelpers.relationOperators).contains(operator);
     }

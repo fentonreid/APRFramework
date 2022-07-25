@@ -3,10 +3,15 @@ package GP.GP;
 import com.github.javaparser.ast.CompilationUnit;
 import Util.ShellProcessBuilder;
 import Util.ProjectPaths;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
+/**
+ * The GPThread class handles the fitness function calculation for a subset of the population as defined by the population size / number of threads.
+ */
 public final class GPThread extends Thread {
     public Thread gpThread;
     public String gpThreadName;
@@ -14,37 +19,57 @@ public final class GPThread extends Thread {
     public String buggyProgramPath;
     public ArrayList<Integer> fitnessResults;
     public ArrayList<CompilationUnit> population;
-    public int numberOfTestCases;
 
-    public GPThread(ArrayList<CompilationUnit> population, int numberOfTestCases, String gpThreadName, String programPath, String buggyProgramPath) {
+    /**
+     * The constructor for the GPThread class, ensures that the public field variables; population, gpThreadName, programPath and buggyProgramPath are set.
+     *
+     * @param population            An ArrayList of Compilation Units representing a mutation of the original buggy Defects4j program
+     * @param gpThreadName          The unique thread number used to represent part of the program path
+     * @param programPath           The program path represents the path on the file system where the Defects4j bug has been checked out
+     * @param buggyProgramPath      The path to the buggy program path, is a combination of the program path and buggy program path fields
+     */
+    public GPThread(ArrayList<CompilationUnit> population, String gpThreadName, String programPath, String buggyProgramPath) {
         this.population = population;
         this.gpThreadName = gpThreadName;
-        this.numberOfTestCases = numberOfTestCases;
         this.programPath = programPath + gpThreadName;
         this.buggyProgramPath = this.programPath + buggyProgramPath;
 
         fitnessResults = new ArrayList<>();
     }
 
+    /**
+     * Each program in the population is copied over, compiled and then tested, the number of failed tests from calling the Defects4j test command is used as the fitness value.
+     */
     public void run() {
-        try {
-            for (CompilationUnit program : population) {
+        for (CompilationUnit program : population) {
+            try {
                 ProjectPaths.writeToFile(Paths.get(buggyProgramPath), program.toString());
 
                 // Defects4j compile checked out program
-                ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath}).waitFor();
+                Process test = ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath});
+
+                BufferedReader errorInput = new BufferedReader(new InputStreamReader(test.getErrorStream()));
+                while (errorInput.readLine() != null) {}
+                test.waitFor();
 
                 // Defects4j run tests on program
                 ArrayList<String> testResults = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "test", "-r", "-w", programPath});
+                testResults.remove(0);
 
-                int failedTests = Character.getNumericValue(testResults.get(0).charAt(testResults.get(0).length() - 1));
-                fitnessResults.add(numberOfTestCases - failedTests);
-            }
+                System.out.println("NO ERROR HAS OCCURRED:");
+                fitnessResults.add(testResults.size());
 
-        } catch (IOException ex) { throw new RuntimeException("Could not copy into '" + buggyProgramPath + "' ");
-        } catch (Exception e) { throw new RuntimeException(e); }
+            } catch (IOException ex) {
+                System.out.println("IO EXCEPTION HAS OCCURRED: " + ex);
+                fitnessResults.add(10000);
+
+            } catch (Exception ex) { throw new RuntimeException(ex); }
+        }
     }
 
+    /**
+     * Starts the gpThread specifying a unique name to the Thread.
+     */
     public void start() {
         if (gpThread == null) {
             gpThread = new Thread(this, gpThreadName);

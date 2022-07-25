@@ -1,17 +1,20 @@
 package Util;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import YAMLParser.Defects4J;
 import org.apache.commons.io.FileUtils;
 
+/**
+ * The ValidDefectsPatches class uploads the valid Defects4j bugs to the Vue website.
+ */
 public final class ValidDefectsPatches {
-    public ValidDefectsPatches() {}
 
-    // This function, checkouts each Defects4j bug and ensures that it has a valid properties file, and is uploaded to Firebase for use in the Vue website
+    /**
+     * Each Defects4j bug is checked out and validated to ensure that it has a valid properties file which is then uploaded to the Firebase database to be processed by the Vue website.
+     *
+     * @throws Exception    The valid bug could not be checked out or uploaded to the Firebase database
+     */
     public static void main() throws Exception {
         HashMap<String, HashSet<Integer>> validBugs =  new Defects4J().validBugs;
 

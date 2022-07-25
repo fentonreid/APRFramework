@@ -13,17 +13,32 @@ import com.github.javaparser.resolution.declarations.ResolvedConstructorDeclarat
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import java.util.*;
 
+/**
+ * The MutationHelpers class provides helper functions for collecting nodes and types of the given AST program.
+ */
 public final class MutationHelpers {
     public static final BinaryExpr.Operator[] relationOperators = new BinaryExpr.Operator[]{ BinaryExpr.Operator.LESS, BinaryExpr.Operator.LESS_EQUALS, BinaryExpr.Operator.GREATER, BinaryExpr.Operator.GREATER_EQUALS, BinaryExpr.Operator.EQUALS, BinaryExpr.Operator.NOT_EQUALS };
     public static final BinaryExpr.Operator[] booleanOperators  = new BinaryExpr.Operator[]{ BinaryExpr.Operator.OR, BinaryExpr.Operator.AND};
     public static final UnaryExpr.Operator[] unaryOperators  = new UnaryExpr.Operator[]{ UnaryExpr.Operator.LOGICAL_COMPLEMENT};
     public static final String[] binaryExpressionAllowedMethods = new String[] { "contains", "startsWith", "endsWith", "equalsIgnoreCase"};
 
+    /**
+     * Returns a random index from a given range.
+     *
+     * @param size  A positive int value that represents the range of possible random values that can be chosen from
+     * @return      A positive random integer from the given range
+     */
     public static int randomIndex(int size) {
         if (size == 1) return 0;
         return new Random().nextInt(size);
     }
 
+    /**
+     * The type parameters of a Method are returned.
+     *
+     * @param method    The MethodDeclaration for the method we want the parameters for
+     * @return          A List of Strings containing the String type of each parameter in the method declaration
+     */
     public static List<String> getMethodParams(ResolvedMethodDeclaration method) {
         List<String> params = new ArrayList<>();
         for (int i = 0; i < method.getNumberOfParams(); i++) {
@@ -33,6 +48,12 @@ public final class MutationHelpers {
         return params;
     }
 
+    /**
+     * The type parameters of a Constructor are returned.
+     *
+     * @param constructor   The ResolvedConstructorDeclaration for the constructor we want the parameters for
+     * @return              A List of Strings containing the String type of each parameter in the constructor declaration
+     */
     public static List<String> getConstructorParams(ResolvedConstructorDeclaration constructor) {
         List<String> params = new ArrayList<>();
         for (int i = 0; i < constructor.getNumberOfParams(); i++) {
@@ -42,6 +63,13 @@ public final class MutationHelpers {
         return params;
     }
 
+    /**
+     * Determines if a node is above or below another node to restrict the amount of nodes that are returned.
+     *
+     * @param position                  A position object that holds the line number for the node we are trying to collect
+     * @param nodeDeclarationPosition   A position object that holds the line number for the fixed node we are comparing against
+     * @return                          A boolean type, true if the node we are interested occurs before the other; false otherwise
+     */
     public static boolean compareLineNumbers(Optional<Position> position, Optional<Position> nodeDeclarationPosition) {
         if (!position.isPresent() || !nodeDeclarationPosition.isPresent()) {
             return false;
@@ -50,6 +78,13 @@ public final class MutationHelpers {
         return position.get().line < nodeDeclarationPosition.get().line;
     }
 
+    /**
+     * Given a list of parameters find replacements for these parameters of the same type. Given a node that represents the node in the AST program find expressions in the local scope that are acceptable.
+     *
+     * @param node      The chosen node that we need to use for line checking
+     * @param params    A list of types as Strings that we need to find replacement expressions for
+     * @return          A nodelist of expressions with the same length as the params list
+     */
     public static NodeList<Expression> getRequiredTypes(Node node, List<String> params) {
         NodeList<Expression> arguments = new NodeList<>();
 
@@ -65,11 +100,25 @@ public final class MutationHelpers {
         return arguments;
     }
 
+    /**
+     * Ensure that the method declaration chosen has been implemented, checking interfaces and abstract classes for static methods.
+     *
+     * @param md    The method declaration that we are trying to determine if it has been implemented or not
+     * @return      A boolean type determining if the method has been implemented or not
+     */
     private static boolean methodImplemented(MethodDeclaration md) {
         if (!md.findAncestor(ClassOrInterfaceDeclaration.class).get().isInterface() && !md.findAncestor(ClassOrInterfaceDeclaration.class).get().isAbstract()) { return true; }
         return (md.resolve().isStatic());
     }
 
+    /**
+     * Resolve all nodes of a certain type in the local and global scope of a given node. Local scope checks the current class and field declaration.
+     * While the global scope checks for method declarations, object creation expressions and field access expressions in other methods and classes.
+     *
+     * @param node              The node we determine a list of expressions for in the local and global scope
+     * @param resolvedType      A String type for the expressions in scope we are trying to collect
+     * @return                  A list of expressions of the required type that where found in the local and global scope of a given node
+     */
     public static List<Expression> resolveCollection(Node node, String resolvedType) {
         List<Expression> expressions = new ArrayList<>();
 
@@ -81,6 +130,17 @@ public final class MutationHelpers {
         return expressions;
     }
 
+    /**
+     * Resolve all expressions in the local scope of a given node including;
+     *  - Enum declarations in the program
+     *  - Field variables in the class
+     *  - Method call expressions, Variable declarations, Object creation expressions and Field access expressions in the method
+     *  - Method parameters of the method the node belongs to if applicable
+     *
+     * @param node              The node we determine a list of expressions for in the local and global scope
+     * @param resolvedType      A String type for the expressions in scope we are trying to collect
+     * @return                  A list of expressions of the required type that where found in the local scope of a given node
+     */
     public static List<Expression> resolveLocalTypes(Node node, String resolvedType) {
         List<Expression> expressions = new ArrayList<>();
 
@@ -107,7 +167,6 @@ public final class MutationHelpers {
 
         node.findAncestor(MethodDeclaration.class).ifPresent(md -> {
             // Skip Method Declaration if method is an interface and not static or is abstract
-
             if (!md.findAncestor(ClassOrInterfaceDeclaration.class).isPresent() || !methodImplemented(md)) { return; }
 
             // Get all method call expressions and check the return type-> person.getName()
@@ -149,6 +208,15 @@ public final class MutationHelpers {
         return expressions;
     }
 
+    /**
+     * Resolve all method declarations in the program that new parameters of the same type can be generated for.
+     * Method declarations must be implementable and accessible for them to be considered.
+     * Methods in the same method and classes are considered as well as static methods and methods in other classes.
+     *
+     * @param node              The node we determine a list of expressions for based on the method declarations in the program
+     * @param resolvedType      A String type for the expressions in scope we are trying to collect
+     * @return                  A list of expressions of the required type that could be resolved in scope of the given node
+     */
     public static List<Expression> resolveMethodDeclarations(Node node, String resolvedType) {
         List<Expression> expressions = new ArrayList<>();
         String nodeMethodSignature = node.findAncestor(MethodDeclaration.class).isPresent() ? node.findAncestor(MethodDeclaration.class).get().resolve().getQualifiedSignature() : null;
@@ -161,7 +229,6 @@ public final class MutationHelpers {
                     // Create a method call expression and resolve types
                     MethodCallExpr currentMCE = new MethodCallExpr().setName(md.resolve().getName());
                     NodeList<Expression> arguments = getRequiredTypes(node, getMethodParams(md.resolve()));
-
 
                     if (arguments != null) {
                         currentMCE.setArguments(arguments);
@@ -207,6 +274,14 @@ public final class MutationHelpers {
         return expressions;
     }
 
+    /**
+     * For a given class try and create all overloaded constructors filling in the parameters as required.
+     * If no valid constructor exists for the class then the default constructor is used instead.
+     *
+     * @param node          The node we determine a list of object creation expressions for
+     * @param className     The name of the class we are trying to find overloaded constructors for
+     * @return              A list of expressions that contain each resolved constructor for the given className
+     */
     public static List<Expression> resolveObjectCreationExpr(Node node, String className) {
         List<Expression> expressions = new ArrayList<>();
 
@@ -233,6 +308,13 @@ public final class MutationHelpers {
         return expressions;
     }
 
+    /**
+     * Resolve all field access expressions in the program.
+     *
+     * @param node              The node we determine a list of expressions for based on the field access expressions in the program
+     * @param resolvedType      A String type for the expressions in scope we are trying to collect
+     * @return                  A list of expressions for field access expressions that could be in different classes and methods
+     */
     public static List<Expression> resolveFieldAccessExpr(Node node, String resolvedType) {
         List<Expression> expressions = new ArrayList<>();
 
@@ -255,7 +337,7 @@ public final class MutationHelpers {
                     if (resolvedNodes.size() > 0) {
                         expressions.add(new FieldAccessExpr().setScope(resolvedNodes.get(MutationHelpers.randomIndex(resolvedNodes.size()))).setName(vd.getNameAsString()));
 
-                        // Create a new Object Expr and prepend to field
+                    // Create a new Object Expr and prepend to field
                     } else {
                         List<Expression> objectCreationExprs = resolveObjectCreationExpr(node, fdClass);
                         if (objectCreationExprs.size() > 0) {
@@ -269,6 +351,12 @@ public final class MutationHelpers {
         return expressions;
     }
 
+    /**
+     * Get all the types in a given program and return them as a HashMap of a type to expressions.
+     *
+     * @param node   The node we determine a list of expressions for based on the field access expressions in the program
+     * @return       A HashMap of String types to a List of expressions that have that type
+     */
     public static HashMap<String, List<Expression>> resolveAllTypes(Node node) {
         HashMap<String, List<Expression>> typeToExpressionMap = new HashMap<>();
         HashSet<String> cuTypes = new HashSet<>();
@@ -291,13 +379,22 @@ public final class MutationHelpers {
         return typeToExpressionMap;
     }
 
+    /**
+     * Given a binary expression e.g. (x > 5 && y < 5) determine the child nodes of this, e.g. x > 5, y < 5.
+     * Child nodes can be enclosed in brackets e.g. (x > 5) or unary e.g. !(x > 5).
+     *
+     * @param node   The node we wish to get the child nodes for, usually a binary expression is passed
+     * @return       A list of nodes that when combined would create the parent node
+     */
     public static List<Node> getChildrenOfExpression(Node node) {
         List<Node> expressions = new ArrayList<>();
 
+        // If the node isn't a binary expression, enclosed expression or unary expression then add the child node, this is the base case
         if (!(node instanceof BinaryExpr) && !(node instanceof EnclosedExpr) && !(node instanceof UnaryExpr)) {
             expressions.add(node);
             return expressions;
 
+        // If this is binary expression is not seperated by && or || then add the left and right nodes as we have children in those nodes
         } else if (node instanceof BinaryExpr) {
             BinaryExpr binaryExpr = (BinaryExpr) node;
 
@@ -307,6 +404,7 @@ public final class MutationHelpers {
             }
         }
 
+        // Get the children nodes and process them recursively until they reach a base case
         for (Node child : node.getChildNodes()) {
             expressions.addAll(getChildrenOfExpression(child));
         }
@@ -314,6 +412,13 @@ public final class MutationHelpers {
         return expressions;
     }
 
+    /**
+     * Statement expressions are ones that occur in if statements, while statements etc...
+     * For this method only statements in if, while and for each statements, are collected as the expressions will be manipulated by various mutation operators.
+     *
+     * @param cu    The AST representation of the program
+     * @return      A list of expressions that represent the expression of a control statement
+     */
     public static List<Expression> collectStatementExpressions(CompilationUnit cu) {
         List<Expression> expressions = new ArrayList<>();
 

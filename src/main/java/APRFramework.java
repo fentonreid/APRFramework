@@ -1,34 +1,40 @@
 import GP.GP.AbstractSyntaxTree;
 import GP.GP.GPRunner;
-import GP.MutationOperators.*;
-//import GP.MutationOperators.BER;
+import GP.MutationOperators.BERExpansion;
+import GP.MutationOperators.BERReduction;
 import Util.Javadoc;
 import Util.ParserRunner;
 import Util.ValidDefectsPatches;
 import com.github.javaparser.ast.CompilationUnit;
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
 import java.nio.file.Paths;
 
 public class APRFramework {
     public static void main(String[] args) throws Exception {
-        //CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("MutationTests/gnr.java"));
+        CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("mutationTest.java"), "");
 
         //BEM.mutate(mutationAST);
         //BAR.mutate(mutationAST);
         //BER.mutate(mutationAST);
-        //BERExpansion.mutate(mutationAST);
-        //BERRemoval.mutate(mutationAST);
+        BERExpansion.mutate(mutationAST);
+        //BERReduction.mutate(mutationAST);
         //LRRelocation.mutate(mutationAST);
         //LRRemoval.mutate(mutationAST);
         //LRRelocation.mutate(mutationAST);
         //LRR.mutate(mutationAST);
         //GNR.mutate(mutationAST);
 
-        // This keeps formatting the same, useful for diff comparisons of patch and fixed code...
-        ////LexicalPreservingPrinter.setup(mutationAST);
-        ////System.out.println(LexicalPreservingPrinter.print(mutationAST));
+        // Ensure clean setup
+        //File checkoutFolder = new File("/tmp/checkout/");
+        //File outputFolder = new File("/output/");
+
+        //if(checkoutFolder.exists()) { FileUtils.deleteDirectory(checkoutFolder); }
+        //if(outputFolder.exists()) { FileUtils.deleteDirectory(outputFolder); }
 
         // Call parserRunner
-        ParserRunner.main("config.yml");
+        //ParserRunner.main("config.yml");
 
         // Call Javadoc
         //if (ParserRunner.output.javadoc) { Javadoc.main(); }

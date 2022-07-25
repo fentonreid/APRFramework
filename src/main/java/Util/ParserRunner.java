@@ -11,12 +11,21 @@ import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * The ParserRunner class splits the YAML configuration file into three objects; Defects4J, GP and Output, and defers the validation and parsing of these to their respective YAMLParser classes.
+ */
 @SuppressWarnings("unchecked")
 public final class ParserRunner {
     public static Gp gp;
     public static Output output;
     public static Defects4J defects4j;
 
+    /**
+     * Parse YAML configuration file and collect and assign properties to each sub-object for access throughout the project.
+     *
+     * @param configurationFileName Name of the configuration file to be parsed
+     * @throws Exception If a YAML object is missing entirely or one/many properties then this exception is thrown
+     */
     public static void main(String configurationFileName) throws Exception {
         InputStream inputStream;
         try { inputStream = Files.newInputStream(Paths.get(configurationFileName)); }

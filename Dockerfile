@@ -61,6 +61,7 @@ RUN wget https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache
 
 WORKDIR /APRFramework
 COPY . .
-RUN mvn clean compile assembly:single
 
-# CMD java -jar target/APRFramework-jar-with-dependencies.jar
+# mvn compile exec:java -Dexec.mainClass="APRFramework"
+#RUN mvn clean compile assembly:single
+#CMD java -jar target/APRFramework-jar-with-dependencies.jar

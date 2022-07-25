@@ -5,20 +5,40 @@ import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.stream.IntStream;
 
+/**
+ * The Defects4J class validates the YAML Defects4J properties.
+ */
 @SuppressWarnings("unchecked")
 public class Defects4J {
     public Map<String, HashSet<Integer>> selectedTestCases = new HashMap<>();
     public HashMap<String, HashSet<Integer>> validBugs;
 
+    /**
+    * Class constructor setting the valid bugs field.
+    *
+    * @exception Exception Valid bugs could not be assigned
+     */
     public Defects4J() throws Exception {
         validBugs = getAllValidBugs();
     }
 
+    /**
+    * Class constructor setting the valid bugs field and parsing the given LinkedHashMap.
+    *
+    * @exception Exception YAML properties could not be created or
+     */
     public Defects4J(LinkedHashMap<String, Object> defects4jHashMap) throws Exception {
         validBugs = getAllValidBugs();
         parse(defects4jHashMap);
     }
 
+    /**
+    * Parse method ensures presence and correct instance types of YAML properties for the Defects4j project.
+    * Parsing of the selected Defects4j bugs from config are performed and unsupported bug ids are removed.
+    *
+    * @param defects4jHashMap   Defects4j YAML object from config
+    * @exception Exception      If defects4jHashMap is missing a property or is of the wrong type
+    */
     public void parse(LinkedHashMap<String, Object> defects4jHashMap) throws Exception {
 
         // Ensure property values of the YAML gp object are present
@@ -66,6 +86,12 @@ public class Defects4J {
         }
     }
 
+    /**
+    * All current active Defects4j bugs that have only one modified class are returned.
+    *
+    * @return               A HashMap of Defects4j projects to a hashset of valid bug id's
+    * @exception Exception  If the Defects4j command output is invalid or throws
+     */
     public HashMap<String, HashSet<Integer>> getAllValidBugs() throws Exception {
         HashMap<String, HashSet<Integer>> validBugs = new HashMap<>();
 
@@ -100,18 +126,29 @@ public class Defects4J {
         return validBugs;
     }
 
+    /**
+    * Given a range of values in the form of an ArrayList determine if they specify range or single bug id's and collect the valid bug id's to return.
+    *
+    * @param identifier         String value of the Defects4j project name to collect bug id's from
+    * @param selectionRange     ArrayList of Object, can be a mix of single bug id's ([5]) or a range ([1-3])
+    * @return                   HashSet of valid bug id's
+    * @exception Exception      The range identifier could not be split or no valid bug id's for a specific identifier could be returned
+     */
     public HashSet<Integer> getRangeSingleIdentifier(String identifier, ArrayList<Object> selectionRange) throws Exception {
         HashSet<Integer> bugIds = new HashSet<>();
 
+        // For each object in the ArrayList
         for (Object bid : selectionRange ) {
             if (!(bid instanceof Integer) && !(bid instanceof String)) { throw new Exception("'" + identifier + "' identifier must only contain a range or integer value"); }
 
+            // If the bug is a single bug and is contained in the valid bugs HashMap
             if (bid instanceof Integer && validBugs.get(identifier).contains((Integer) bid)) {
                 bugIds.add((Integer) bid);
                 continue;
             }
 
             try {
+                // Try and split the range by '-'
                 String[] idSplit = ((String) bid).split("-");
                 int[] idRange = IntStream.rangeClosed(Integer.parseInt(idSplit[0]), Integer.parseInt(idSplit[1])).toArray();
                 for (int intInRange: idRange) {

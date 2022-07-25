@@ -2,6 +2,9 @@ package YAMLParser;
 
 import java.util.LinkedHashMap;
 
+/**
+ * The Output class validates the YAML Output properties.
+ */
 @SuppressWarnings("unchecked")
 public class Output {
     public String summaryCSV;
@@ -10,10 +13,21 @@ public class Output {
     public Boolean uploadToGeneratePatches;
     public Boolean gp;
 
+    /**
+     * Class constructor parsing the given LinkedHashMap.
+     *
+     * @exception Exception HashMap could not be assigned
+     */
     public Output(LinkedHashMap<String, Object> outputHashMap) throws Exception {
         parse(outputHashMap);
     }
 
+    /**
+     * Parse method ensures presence and correct instance types of YAML properties for the Output object.
+     *
+     * @param outputHashMap     GP YAML object from config
+     * @exception Exception     If gpHashMap is missing a property or is of the wrong type
+     */
     public void parse(LinkedHashMap<String, Object> outputHashMap) throws Exception {
         // Ensure property values of the YAML gp object are present
         if (!outputHashMap.containsKey("csv")) { throw new Exception("'csv' property is missing in the config.yml 'output' object "); }

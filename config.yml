@@ -1,17 +1,26 @@
 gp:
-  generations: 1
-  populationSize: 1
+  generations: 5
+  populationSize: 10
   mutationRate: 1
   mutationOperators:
-    - GNR
+    - BERExpansion
   iterationsPerBug: 1
-  numberOfThreads: 1 # (2 works best for this laptop)
+  numberOfThreads: 2 # (2 works best for this laptop)
 
 defects4j:
   testCaseSelection:
     method: identifier
     selection:
-      Lang: [1]
+      #PASS LRRemoval Compress: [31]
+      #PASS LRRelocation Closure: [13]
+      #PASS BEM (may be overfit) BEM Closure: [62]
+      #PASS BERReduction Closure 18
+      #TRYING BERExpansion Closure 113
+
+      Closure: [113]
+
+      #Lang: [9]
+      #Time: [4]
       #Closure: all
       #Lang: [1]
       #Lang: [1]
@@ -24,4 +33,4 @@ output:
   javadoc: false
   uploadToPatchViewer: false
   uploadToGeneratePatches: false
-  gp: false
+  gp: true
