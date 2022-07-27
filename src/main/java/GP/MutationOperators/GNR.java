@@ -82,7 +82,6 @@ public final class GNR {
 
         if(nodeTo != null) { nodeFrom.replace(nodeTo); }
 
-        System.out.println("MUTATION DONE::::");
         return program.clone();
     }
 

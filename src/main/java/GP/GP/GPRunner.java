@@ -90,7 +90,7 @@ public final class GPRunner {
                             params.put("identifier", identifier);
                             params.put("bid", bid);
                             params.put("actualPatch", currentIterationPatch.toString().replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r"));
-                            // This has to change :p
+                            params.put("mutationOperator", mutationOperator);
                             params.put("gpPatch", FileUtils.readFileToString(ProjectPaths.getFixedProgramPath(identifier, bid).toFile(), "UTF-8").replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r"));
                             params.put("overfitness", "Unassigned");
 

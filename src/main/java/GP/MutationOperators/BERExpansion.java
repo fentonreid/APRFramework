@@ -52,7 +52,6 @@ public final class BERExpansion {
 
         randomExpression.replace(resultingExpression);
 
-        System.out.println(program);
         return program.clone();
     }
 
@@ -142,16 +141,16 @@ public final class BERExpansion {
             return mce;
         }
 
-        relationalOperators = new BinaryExpr.Operator[] {BinaryExpr.Operator.EQUALS, BinaryExpr.Operator.NOT_EQUALS};
-
         newExpr.setLeft(expressions.get(randomType).get(MutationHelpers.randomIndex(expressions.get(randomType).size())));
-        newExpr.setOperator(relationalOperators[MutationHelpers.randomIndex(relationalOperators.length)]);
         expressions.get(randomType).remove(newExpr.getLeft());
 
         // 10 chance to add a null comparison to the binary expression
         if (Math.random() < 0.9) {
             newExpr.setRight(expressions.get(randomType).get(MutationHelpers.randomIndex(expressions.get(randomType).size())));
+            newExpr.setOperator(relationalOperators[MutationHelpers.randomIndex(relationalOperators.length)]);
         } else {
+            relationalOperators = new BinaryExpr.Operator[] {BinaryExpr.Operator.EQUALS, BinaryExpr.Operator.NOT_EQUALS};
+            newExpr.setOperator(relationalOperators[MutationHelpers.randomIndex(relationalOperators.length)]);
             newExpr.setRight(new NameExpr().setName("null"));
         }
 

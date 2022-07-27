@@ -23,17 +23,16 @@ public class TestShellProcessBuilder {
     @DisplayName("Defects4J")
     public void TestShellProcessDefects4J() throws Exception {
         // Ensure we can check out a Defects4J bug
-        Path checkoutPath = Paths.get("/APRFramework/src/test/java/Util/Lang_1_test");
-        Process runningProcess = ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", "Lang", "-v", 1 + "b", "-w", checkoutPath.toString()});
-        if (new InputStreamReader(runningProcess.getInputStream()).read() != -1) { throw new Exception("Error when trying to checkout '" + "Lang" + "' with a bug id of '" + 1); }
+        Path checkoutPath = Paths.get("/APRFramework/src/test/resources/Checkout/Lang_1_test");
+        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", "Lang", "-v", 1 + "b", "-w", checkoutPath.toString()}).waitFor();
         assertTrue(checkoutPath.toFile().exists());
 
         // Ensure we can compile and test a Defects4J bug
-        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", checkoutPath.toString()});
+        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", checkoutPath.toString()}).waitFor();
         ArrayList<String> testResults = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "test", "-r", "-w", checkoutPath.toString()});
         assertTrue(testResults.size() >= 1);
         assertTrue(testResults.get(0).contains("Failing tests"));
-        
+
         // Remove checkoutPath
         FileUtils.deleteDirectory(checkoutPath.toFile());
     }

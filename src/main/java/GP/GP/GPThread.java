@@ -61,7 +61,7 @@ public final class GPThread extends Thread {
 
             } catch (IOException ex) {
                 System.out.println("IO EXCEPTION HAS OCCURRED: " + ex);
-                fitnessResults.add(10000);
+                fitnessResults.add(10_000);
 
             } catch (Exception ex) { throw new RuntimeException(ex); }
         }

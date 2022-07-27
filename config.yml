@@ -33,4 +33,4 @@ output:
   javadoc: false
   uploadToPatchViewer: false
   uploadToGeneratePatches: false
-  gp: true
+  gp: false

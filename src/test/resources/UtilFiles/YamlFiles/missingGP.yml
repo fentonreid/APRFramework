@@ -1,0 +1,12 @@
+defects4j:
+  testCaseSelection:
+    method: identifier
+    selection:
+      Lang: [1]
+
+output:
+  csv: summary
+  javadoc: false
+  uploadToPatchViewer: false
+  uploadToGeneratePatches: false
+  gp: false

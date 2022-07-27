@@ -20,7 +20,7 @@ public final class MutationHelpers {
     public static final BinaryExpr.Operator[] relationOperators = new BinaryExpr.Operator[]{ BinaryExpr.Operator.LESS, BinaryExpr.Operator.LESS_EQUALS, BinaryExpr.Operator.GREATER, BinaryExpr.Operator.GREATER_EQUALS, BinaryExpr.Operator.EQUALS, BinaryExpr.Operator.NOT_EQUALS };
     public static final BinaryExpr.Operator[] booleanOperators  = new BinaryExpr.Operator[]{ BinaryExpr.Operator.OR, BinaryExpr.Operator.AND};
     public static final UnaryExpr.Operator[] unaryOperators  = new UnaryExpr.Operator[]{ UnaryExpr.Operator.LOGICAL_COMPLEMENT};
-    public static final String[] binaryExpressionAllowedMethods = new String[] { "contains", "startsWith", "endsWith", "equalsIgnoreCase"};
+    public static final String[] binaryExpressionAllowedMethods = new String[] { "contains", "startsWith", "endsWith", "equalsIgnoreCase", "equals"};
 
     /**
      * Returns a random index from a given range.
@@ -106,7 +106,7 @@ public final class MutationHelpers {
      * @param md    The method declaration that we are trying to determine if it has been implemented or not
      * @return      A boolean type determining if the method has been implemented or not
      */
-    private static boolean methodImplemented(MethodDeclaration md) {
+    public static boolean methodImplemented(MethodDeclaration md) {
         if (!md.findAncestor(ClassOrInterfaceDeclaration.class).get().isInterface() && !md.findAncestor(ClassOrInterfaceDeclaration.class).get().isAbstract()) { return true; }
         return (md.resolve().isStatic());
     }
@@ -228,8 +228,10 @@ public final class MutationHelpers {
                 if (md.resolve().getReturnType().describe().equals(resolvedType) && !md.resolve().getQualifiedSignature().equals(nodeMethodSignature) && methodImplemented(md)) {
                     // Create a method call expression and resolve types
                     MethodCallExpr currentMCE = new MethodCallExpr().setName(md.resolve().getName());
-                    NodeList<Expression> arguments = getRequiredTypes(node, getMethodParams(md.resolve()));
+                    List<String> methodParameters = getMethodParams(md.resolve());
+                    NodeList<Expression> arguments = getRequiredTypes(node, methodParameters);
 
+                    // If arguments are non-null then replace original arguments
                     if (arguments != null) {
                         currentMCE.setArguments(arguments);
                     } else {
@@ -447,6 +449,13 @@ public final class MutationHelpers {
                     expressions.add(stmt.getExpression().get());
                 }
             });
+        });
+
+        // Get logical complement unary values
+        cu.findAll(UnaryExpr.class).forEach(ue -> {
+            if (ue.getOperator().equals(UnaryExpr.Operator.LOGICAL_COMPLEMENT)) {
+                expressions.add(ue);
+            }
         });
 
         return expressions;

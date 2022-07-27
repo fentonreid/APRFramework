@@ -1,7 +1,6 @@
 import GP.GP.AbstractSyntaxTree;
 import GP.GP.GPRunner;
-import GP.MutationOperators.BERExpansion;
-import GP.MutationOperators.BERReduction;
+import GP.MutationOperators.*;
 import Util.Javadoc;
 import Util.ParserRunner;
 import Util.ValidDefectsPatches;
@@ -13,12 +12,12 @@ import java.nio.file.Paths;
 
 public class APRFramework {
     public static void main(String[] args) throws Exception {
-        CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("mutationTest.java"), "");
+        //CompilationUnit mutationAST = AbstractSyntaxTree.generateAST(Paths.get("mutationTest.java"), "");
 
         //BEM.mutate(mutationAST);
         //BAR.mutate(mutationAST);
         //BER.mutate(mutationAST);
-        BERExpansion.mutate(mutationAST);
+        //BERExpansion.mutate(mutationAST);
         //BERReduction.mutate(mutationAST);
         //LRRelocation.mutate(mutationAST);
         //LRRemoval.mutate(mutationAST);
@@ -29,9 +28,11 @@ public class APRFramework {
         // Ensure clean setup
         //File checkoutFolder = new File("/tmp/checkout/");
         //File outputFolder = new File("/output/");
+        File tempCheckoutFolder = new File("src/test/java/Util/Lang_1_test");
 
         //if(checkoutFolder.exists()) { FileUtils.deleteDirectory(checkoutFolder); }
         //if(outputFolder.exists()) { FileUtils.deleteDirectory(outputFolder); }
+        if (tempCheckoutFolder.exists()) { FileUtils.deleteDirectory(tempCheckoutFolder); }
 
         // Call parserRunner
         //ParserRunner.main("config.yml");

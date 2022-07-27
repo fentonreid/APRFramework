@@ -57,7 +57,7 @@ public final class LRRemoval {
                 IfStmt ifStmt = (IfStmt) removeNode;
 
                 // If an else statement exists then the else statement will be removed
-                if (ifStmt.hasElseBranch()) {
+                if (ifStmt.hasElseBranch() && Math.random() < 0.5) {
                     ifStmt.removeElseStmt();
                 } else {
                     removeNode.removeForced();

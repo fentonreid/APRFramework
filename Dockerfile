@@ -63,5 +63,7 @@ WORKDIR /APRFramework
 COPY . .
 
 # mvn compile exec:java -Dexec.mainClass="APRFramework"
+# mvn -Dtest=TestSPM#SPM1 test
+
 #RUN mvn clean compile assembly:single
 #CMD java -jar target/APRFramework-jar-with-dependencies.jar

@@ -1,8 +1,0 @@
-defects4j:
-  testCaseSelection:
-    method: identifier
-    selection:
-      Lang: [1]
-
-output:
-  csv: summary

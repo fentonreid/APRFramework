@@ -79,8 +79,8 @@ public final class LRRelocation {
 
             if (nodeList.size() > 1) { methodNodes.add(nodeList); }
         });
-        
-        if (methodNodes.size() > 1) { return methodNodes.get(MutationHelpers.randomIndex(methodNodes.size())); }
+
+        if (methodNodes.size() >= 1) { return methodNodes.get(MutationHelpers.randomIndex(methodNodes.size())); }
 
         return null;
     }

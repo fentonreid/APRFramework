@@ -1,0 +1,14 @@
+gp:
+  generations: 1
+  populationSize: 1
+  mutationRate: 1
+  mutationOperators: all
+  iterationsPerBug: 1
+  numberOfThreads: 1
+
+output:
+  csv: summary
+  javadoc: false
+  uploadToPatchViewer: false
+  uploadToGeneratePatches: false
+  gp: true

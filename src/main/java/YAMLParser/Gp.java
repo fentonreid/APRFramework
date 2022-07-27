@@ -18,6 +18,8 @@ public class Gp {
     public int iterationsPerBug;
     public int numberOfThreads;
 
+    public Gp(){}
+
     /**
      * Class constructor parsing the given LinkedHashMap.
      *

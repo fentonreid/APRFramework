@@ -29,6 +29,7 @@ public final class BERReduction {
      */
     public static CompilationUnit mutate(CompilationUnit program) throws UnmodifiedProgramException {
         List<Expression> expressions = new ArrayList<>(collectBinaryExpressions(program));
+        System.out.println(expressions);
         if (expressions.size() == 0) { throw new UnmodifiedProgramException("No valid binary expression was found"); }
 
         System.out.println(expressions);

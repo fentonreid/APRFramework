@@ -3,9 +3,11 @@ package GP.MutationOperators;
 import GP.GP.UnmodifiedProgramException;
 import Util.MutationHelpers;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.expr.*;
 import java.util.*;
+import static Util.MutationHelpers.getChildrenOfExpression;
 
 /**
  * The Boolean Expression Modification (BEM) mutation is a child of the Boolean And Relational (BAR) mutation, with the goal of switching the boolean and relational operators of expressions<br>
@@ -34,6 +36,18 @@ public final class BEM {
      */
     public static CompilationUnit mutate(CompilationUnit program) throws UnmodifiedProgramException {
         List<Expression> expressions = new ArrayList<>(MutationHelpers.collectStatementExpressions(program));
+
+        // For all expressions split into children
+        List<Expression> newExpressions = new ArrayList<>();
+        for (Expression expression : expressions) {
+            for (Node node : getChildrenOfExpression(expression)) {
+                if (node instanceof BinaryExpr || node instanceof EnclosedExpr) {
+                    newExpressions.add((Expression) node);
+                }
+            }
+        }
+
+        expressions.addAll(newExpressions);
 
         // Ensure non-nullness then pick a random expression from the given list
         if (expressions.size() == 0) { throw new UnmodifiedProgramException("No expression found in the given CompilationUnit"); }

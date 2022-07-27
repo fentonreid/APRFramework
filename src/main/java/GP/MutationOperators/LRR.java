@@ -5,6 +5,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.LambdaExpr;
 import com.github.javaparser.ast.expr.MarkerAnnotationExpr;
@@ -55,6 +56,7 @@ public final class LRR {
         allowedNodeTypes.add(ExpressionStmt.class);
         allowedNodeTypes.add(ReturnStmt.class);
         allowedNodeTypes.add(SwitchEntry.class);
+        allowedNodeTypes.add(SwitchStmt.class);
         allowedNodeTypes.add(ThrowStmt.class);
         allowedNodeTypes.add(WhileStmt.class);
 
