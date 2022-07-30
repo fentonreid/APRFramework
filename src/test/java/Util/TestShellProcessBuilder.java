@@ -24,11 +24,11 @@ public class TestShellProcessBuilder {
     public void TestShellProcessDefects4J() throws Exception {
         // Ensure we can check out a Defects4J bug
         Path checkoutPath = Paths.get("/APRFramework/src/test/resources/Checkout/Lang_1_test");
-        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", "Lang", "-v", 1 + "b", "-w", checkoutPath.toString()}).waitFor();
+        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", "Lang", "-v", 1 + "b", "-w", checkoutPath.toString()});
         assertTrue(checkoutPath.toFile().exists());
 
         // Ensure we can compile and test a Defects4J bug
-        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", checkoutPath.toString()}).waitFor();
+        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", checkoutPath.toString()});
         ArrayList<String> testResults = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "test", "-r", "-w", checkoutPath.toString()});
         assertTrue(testResults.size() >= 1);
         assertTrue(testResults.get(0).contains("Failing tests"));

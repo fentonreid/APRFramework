@@ -1,9 +1,11 @@
 package GP.GP;
 
+import GP.MutationOperators.GNR;
 import Util.ParserRunner;
 import com.github.javaparser.ast.CompilationUnit;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * The MutationThread class handles the application of the mutation to a subset of the population as defined by the population size / number of threads.
@@ -35,20 +37,22 @@ public final class MutationThread extends Thread {
     public void run() {
         for (CompilationUnit program : population) {
             try {
-                if (Math.random() < ParserRunner.gp.mutationRate) { mutatedPopulation.add((CompilationUnit) mutationOperator.getMethod("mutate", CompilationUnit.class).invoke(mutationOperator, program.clone())); }
+                System.out.println("WORKED FINE!");
+                if (Math.random() < ParserRunner.gp.mutationRate) {
+                    mutatedPopulation.add((CompilationUnit) mutationOperator.getMethod("mutate", CompilationUnit.class).invoke(mutationOperator, program.clone()));
+                }
 
             } catch (InvocationTargetException ite) {
-                if (ite.getCause() instanceof UnmodifiedProgramException) { System.out.println("Unmodified Program Exception here:\t" + " " + ite.getCause().getMessage() + program.clone()); }
-                else { System.out.println("Something else happened: " + ite.getCause().getMessage()); }
+                if (ite.getCause() instanceof UnmodifiedProgramException) { System.out.println("Unmodified Program Exception here:\t" + " " + ite.getCause().getMessage()); }
+                else {
+                    System.out.println("Tried to apply a mutation but it failed " + ite.getCause().getMessage() + Arrays.toString(ite.getStackTrace()) + ite.getLocalizedMessage()); }
 
                 mutatedPopulation.add(ast.clone());
 
             } catch (Exception ex) {
-                throw new RuntimeException("Tried to apply a mutation but it failed" + ex);
+                throw new RuntimeException("Unknown error " + ex);
             }
         }
-
-        System.out.println("MUTATION THREAD DONE :PPP");
     }
 
     /**

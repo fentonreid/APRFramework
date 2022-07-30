@@ -36,6 +36,7 @@ public final class BERExpansion {
      */
     public static CompilationUnit mutate(CompilationUnit program) throws UnmodifiedProgramException {
         List<Expression> expressions = new ArrayList<>(MutationHelpers.collectStatementExpressions(program));
+
         if (expressions.size() == 0) { throw new UnmodifiedProgramException("No valid binary expression was found"); }
 
         // Pick a random expression from the expression list and get the children of that expression
@@ -52,6 +53,7 @@ public final class BERExpansion {
 
         randomExpression.replace(resultingExpression);
 
+        System.out.println("RESULTING EXPRESSION: " + resultingExpression);
         return program.clone();
     }
 
@@ -145,7 +147,7 @@ public final class BERExpansion {
         expressions.get(randomType).remove(newExpr.getLeft());
 
         // 10 chance to add a null comparison to the binary expression
-        if (Math.random() < 0.9) {
+        if (Math.random() < 0.1) {
             newExpr.setRight(expressions.get(randomType).get(MutationHelpers.randomIndex(expressions.get(randomType).size())));
             newExpr.setOperator(relationalOperators[MutationHelpers.randomIndex(relationalOperators.length)]);
         } else {

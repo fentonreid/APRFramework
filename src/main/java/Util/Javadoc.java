@@ -18,7 +18,7 @@ public final class Javadoc {
      */
     public static void main() throws Exception {
         // Run maven javadoc
-        ShellProcessBuilder.runCommand(new String[]{"mvn", "javadoc:javadoc"}, new File("/APRFramework/")).waitFor();
+        ShellProcessBuilder.runCommand(new String[]{"mvn", "javadoc:javadoc"}, new File("/APRFramework/"));
         
         // Assert that /APRFramework/target/site/apidocs exists
         Path javadocPath = Paths.get("/APRFramework/target/site/apidocs");

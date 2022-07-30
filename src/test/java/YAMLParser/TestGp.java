@@ -1,6 +1,8 @@
 package YAMLParser;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import GP.Util;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import java.io.File;
@@ -9,8 +11,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.Objects;
 
 public class TestGp {
+
+    ClassLoader classLoader = Util.class.getClassLoader();
+
     public LinkedHashMap<String, Object> gpHashMap;
 
     public ArrayList<String> getAllMutationOperators() throws Exception {
@@ -139,8 +145,11 @@ public class TestGp {
         gpHashMap.put("mutationOperators", "all");
         assertEquals(new Gp(gpHashMap).mutationOperators, mutationOperators);
 
+
+
+
         Path destination = Paths.get("src/main/java/GP/MutationOperators/MutationOperatorWithoutMutateMethod.java");
-        Files.copy(Paths.get("src/test/java/YAMLParser/MutationOperators/MutationOperatorWithoutMutateMethod.java"), destination);
+        Files.copy(new File(Objects.requireNonNull(classLoader.getResource( "YAMLParserFiles/MutationOperatorWithoutMutateMethod.java")).getFile()).toPath(), destination);
         gpHashMap.put("mutationOperators", "MutationOperatorWithoutMutateMethod");
         assertThrows(Exception.class, () -> new Gp(gpHashMap));
         Files.delete(destination);

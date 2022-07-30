@@ -1,6 +1,8 @@
 package Util;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import GP.Util;
 import com.github.javaparser.ast.CompilationUnit;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.DisplayName;
@@ -9,12 +11,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class TestProjectPaths {
     final Path checkoutPath = Paths.get("/APRFramework/src/test/java/Util/Lang_1_test");
 
     public void reinitialise() throws Exception {
-        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", "Lang", "-v", 1 + "b", "-w", checkoutPath.toString()}).waitFor();
+        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", "Lang", "-v", 1 + "b", "-w", checkoutPath.toString()});
     }
 
     public void deleteCheckout() throws Exception {
@@ -24,6 +27,7 @@ public class TestProjectPaths {
     @Test
     @DisplayName("Get Buggy Program Path")
     public void testGetBuggyProgramPath() throws Exception {
+        ClassLoader classLoader = Util.class.getClassLoader();
         reinitialise();
 
         // Valid build.properties file
@@ -32,17 +36,18 @@ public class TestProjectPaths {
         Path buildPropertiesFile = Paths.get(checkoutPath + "/" + "defects4j.build.properties");
 
         // Invalid build.properties file -> Missing Modified Classes
-        Files.copy(Paths.get("src/test/java/Util/BuildPropertyFiles/missingModifiedClass.properties"), buildPropertiesFile, StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(new File(Objects.requireNonNull(classLoader.getResource( "UtilFiles/BuildPropertyFiles/missingModifiedClass.properties")).getFile()).toPath(), buildPropertiesFile, StandardCopyOption.REPLACE_EXISTING);
         assertThrows(NullPointerException.class, () -> ProjectPaths.getBuggyProgramPath(checkoutPath.toString()));
 
         // Invalid build.properties file -> Modified class path could not be found
-        Files.copy(Paths.get("src/test/java/Util/BuildPropertyFiles/modifiedClassCannotBeFound.properties"), buildPropertiesFile, StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(new File(Objects.requireNonNull(classLoader.getResource( "UtilFiles/BuildPropertyFiles/modifiedClassCannotBeFound.properties")).getFile()).toPath(), buildPropertiesFile, StandardCopyOption.REPLACE_EXISTING);
         assertThrows(Exception.class, () -> ProjectPaths.getBuggyProgramPath(checkoutPath.toString()));
 
         deleteCheckout();
     }
 
     @Test
+    @DisplayName("Get Fixed Program Path")
     public void testGetFixedProgramPath() throws Exception {
         // Valid Defects4J project exists
         assertEquals(ProjectPaths.getFixedProgramPath("Lang", 1).toString(), "/defects4j/framework/projects/Lang/patches/1.src.patch");
@@ -52,6 +57,7 @@ public class TestProjectPaths {
     }
 
     @Test
+    @DisplayName("Save bugs to file system")
     public void testSaveBugsToFileSystem() throws Exception {
         // Give value of Lang, 1, MutationOperator1, patches 0
         ProjectPaths.saveBugsToFileSystem("Lang", 1, "MutationOperator1", new ArrayList<>());

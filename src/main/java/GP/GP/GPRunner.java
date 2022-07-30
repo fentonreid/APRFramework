@@ -45,16 +45,15 @@ public final class GPRunner {
                     if (threadCount > 1) {
                         FileUtils.copyDirectory(new File(checkoutFolderBase + "1"), new File(checkoutPath));
                     } else {
-                        int exitCode = ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", identifier, "-v", bid + "b", "-w", checkoutPath}).waitFor();
-                        if (exitCode != 0) { throw new Exception("Error could not compile the program properly"); }
+                        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", identifier, "-v", bid + "b", "-w", checkoutPath});
 
                         // Cache files for quicker processing
                         startCompileTime = System.nanoTime();
-                        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", checkoutPath}).waitFor();
+                        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", checkoutPath});
                         endCompileTime = System.nanoTime();
 
                         startTestTime = System.nanoTime();
-                        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "test", "-r", "-w", checkoutPath}).waitFor();
+                        ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "test", "-r", "-w", checkoutPath});
                         endTestTime = System.nanoTime();
                     }
 
@@ -78,7 +77,7 @@ public final class GPRunner {
 
                     for (int i = 1; i <= ParserRunner.gp.iterationsPerBug; i++) {
                         long startIterationTime = System.nanoTime();
-                        CompilationUnit buggyAST = AbstractSyntaxTree.generateAST(Paths.get(checkoutPath + buggyFilePath), sourceDirectory);
+                        CompilationUnit buggyAST = AbstractSyntaxTree.generateAST(Paths.get(checkoutPath + buggyFilePath), checkoutPath, sourceDirectory);
 
                         CompilationUnit currentIterationPatch = new GP(buggyAST, Class.forName("GP.MutationOperators." + mutationOperator), checkoutFolderBase, buggyFilePath.toString()).main();
                         if (currentIterationPatch != null) {
@@ -86,20 +85,23 @@ public final class GPRunner {
 
                             // Prepare parameters for JSON payload to firebase
                             Map<String, Object> params = new HashMap<>();
+                            params.put("id", identifier + "_" + mutationOperator + "_" + patches.size());
                             params.put("patchId", patches.size());
                             params.put("identifier", identifier);
                             params.put("bid", bid);
-                            params.put("actualPatch", currentIterationPatch.toString().replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r"));
+                            params.put("actualPatch", ProjectPaths.getFixedBugFromDefects4j(identifier, bid).replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r"));
                             params.put("mutationOperator", mutationOperator);
-                            params.put("gpPatch", FileUtils.readFileToString(ProjectPaths.getFixedProgramPath(identifier, bid).toFile(), "UTF-8").replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r"));
+                            params.put("gpPatch", currentIterationPatch.toString().replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r"));
                             params.put("overfitness", "Unassigned");
 
                             // Upload patch to Firebase
-                            try { Firebase.UploadPatchToFirebase("generatedpatches.json", params); }
-                            catch (Exception ex) { System.out.println("Failed to upload generated patch to firebase: " + identifier + " " + bid); }
+                            if (ParserRunner.output.uploadToGeneratePatches) {
+                                try { Firebase.UploadPatchToFirebase("generatedpatches.json", params); }
+                                catch (Exception ex) { System.out.println("Failed to upload generated patch to firebase: " + identifier + " " + bid); }
+                            }
                         }
-                        long endIterationTime = System.nanoTime();
 
+                        long endIterationTime = System.nanoTime();
                         CSVOutput.addIterationBreakdownEntry(i, mutationOperator, 1, CSVOutput.formatTime(startIterationTime, endIterationTime));
                     }
 
@@ -113,7 +115,7 @@ public final class GPRunner {
                 // Copy fixed bug into /output
                 ProjectPaths.copyFile(ProjectPaths.getFixedProgramPath(identifier, bid), Paths.get("/output/" + identifier + "_" + bid + "/Defects4J_Validated_Patch"));
 
-                //Delete the /tmp/{identifier}_{bid} directory
+                // Delete the /tmp/{identifier}_{bid} directory
                 FileUtils.deleteDirectory(new File(checkoutFolderBase));
             }
         }

@@ -1,11 +1,11 @@
 gp:
-  generations: 5
-  populationSize: 10
+  generations: 10
+  populationSize: 100
   mutationRate: 1
   mutationOperators:
-    - BERExpansion
-  iterationsPerBug: 1
-  numberOfThreads: 2 # (2 works best for this laptop)
+    - GNR
+  iterationsPerBug: 2
+  numberOfThreads: 1
 
 defects4j:
   testCaseSelection:
@@ -16,21 +16,14 @@ defects4j:
       #PASS BEM (may be overfit) BEM Closure: [62]
       #PASS BERReduction Closure 18
       #TRYING BERExpansion Closure 113
+      #TRYING GNR Lang 26
 
-      Closure: [113]
+      Lang: [26]
 
-      #Lang: [9]
-      #Time: [4]
-      #Closure: all
-      #Lang: [1]
-      #Lang: [1]
-      #Lang: [1,3-10]
-      #Chart: all
-      #Closure: [1-4, 6, 8-12] # 1,2,3,4,6,8,9,10,11,12
 
 output:
   csv: summary
   javadoc: false
   uploadToPatchViewer: false
   uploadToGeneratePatches: false
-  gp: false
+  gp: true

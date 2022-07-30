@@ -1,6 +1,8 @@
 package Util;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import GP.Util;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
@@ -9,48 +11,57 @@ import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 public class TestMutationHelpers {
-    final String basePath = "/src/test/java/Util/MutationHelperFiles/";
+    final String basePath = "UtilFiles/MutationHelperFiles/";
+    ClassLoader classLoader = Util.class.getClassLoader();
 
-    public CompilationUnit collectAndParseProgramFromFile(String path) {
+    public CompilationUnit collectAndParseProgramFromFile(File file) throws IOException {
         StaticJavaParser.getConfiguration().setAttributeComments(false);
-        StaticJavaParser.getConfiguration().setSymbolResolver(new JavaSymbolSolver(new CombinedTypeSolver(new ReflectionTypeSolver())));
+        StaticJavaParser.getConfiguration().setSymbolResolver(new JavaSymbolSolver(new ReflectionTypeSolver()));
 
-        return StaticJavaParser.parse(path);
+        return StaticJavaParser.parse(FileUtils.readFileToString(file, StandardCharsets.UTF_8));
     }
 
     @Test
     @DisplayName("Get method parameters")
-    public void testMethodParams() {
-        CompilationUnit program = collectAndParseProgramFromFile(basePath + "MethodParams.java");
+    public void testMethodParams() throws IOException {
+        CompilationUnit program = collectAndParseProgramFromFile(new File(Objects.requireNonNull(classLoader.getResource( basePath + "MethodParams.java")).getFile()));
         List<MethodDeclaration> methodDeclarations = new ArrayList<>(program.findAll(MethodDeclaration.class));
         assertEquals(methodDeclarations.size(), 1);
 
         List<String> methodParams = MutationHelpers.getMethodParams(methodDeclarations.get(0).resolve());
-        assertEquals(methodDeclarations.size(), 3);
+        assertEquals(methodParams.size(), 3);
 
         List<String> knownMethodParams = new ArrayList<>();
-        knownMethodParams.add("String");
-        knownMethodParams.add("String");
-        knownMethodParams.add("String");
+        knownMethodParams.add("java.lang.String");
+        knownMethodParams.add("java.lang.String");
+        knownMethodParams.add("java.lang.String");
 
         assertEquals(knownMethodParams, methodParams);
     }
 
     @Test
     @DisplayName("Get constructor parameters")
-    public void testConstructorParams() {
-        CompilationUnit program = collectAndParseProgramFromFile(basePath + "ConstructorParams.java");
+    public void testConstructorParams() throws IOException {
+        CompilationUnit program = collectAndParseProgramFromFile(new File(Objects.requireNonNull(classLoader.getResource( basePath + "ConstructorParams.java")).getFile()));
+
         List<ConstructorDeclaration> constructorDeclarations = new ArrayList<>(program.findAll(ConstructorDeclaration.class));
         assertEquals(constructorDeclarations.size(), 1);
 
@@ -59,17 +70,19 @@ public class TestMutationHelpers {
 
         List<String> knownConstructorParams = new ArrayList<>();
         knownConstructorParams.add("int");
-        knownConstructorParams.add("String");
-        knownConstructorParams.add("Boolean");
-        knownConstructorParams.add("Double");
+        knownConstructorParams.add("java.lang.String");
+        knownConstructorParams.add("java.lang.Boolean");
+        knownConstructorParams.add("java.lang.Double");
 
         assertEquals(knownConstructorParams, constructorParams);
     }
 
+
     @Test
     @DisplayName("Compare line numbers")
-    public void testCompareLineNumbers() {
-        CompilationUnit program = collectAndParseProgramFromFile(basePath + "CompareLineNumbers.java");
+    public void testCompareLineNumbers() throws IOException {
+        CompilationUnit program = collectAndParseProgramFromFile(new File(Objects.requireNonNull(classLoader.getResource( basePath + "CompareLineNumbers.java")).getFile()));
+
         List<VariableDeclarator> variableDeclarators = new ArrayList<>(program.findAll(VariableDeclarator.class));
         assertEquals(variableDeclarators.size(), 2);
 
@@ -81,17 +94,19 @@ public class TestMutationHelpers {
 
     @Test
     @DisplayName("Get Required Types")
-    public void testRequiredTypes() {
-        CompilationUnit program = collectAndParseProgramFromFile(basePath + "RequiredTypes.java");
-        List<MethodDeclaration> methodDeclarations = new ArrayList<>(program.findAll(MethodDeclaration.class));
-        assertEquals(methodDeclarations.size(), 2);
+    public void testRequiredTypes() throws IOException {
+        CompilationUnit program = collectAndParseProgramFromFile(new File(Objects.requireNonNull(classLoader.getResource( basePath + "RequiredTypes.java")).getFile()));
 
-        MethodDeclaration method1 = methodDeclarations.get(0);
+        List<MethodCallExpr> methodCallExpressions = new ArrayList<>(program.findAll(MethodCallExpr.class));
+        assertEquals(methodCallExpressions.size(), 1);
+
+        MethodCallExpr mce = methodCallExpressions.get(0);
         List<String> params = new ArrayList<>();
         params.add("int");
-        params.add("String");
+        params.add("java.lang.String");
 
-        NodeList<Expression> requiredTypes = MutationHelpers.getRequiredTypes(method1, params);
+        NodeList<Expression> requiredTypes = MutationHelpers.getRequiredTypes(mce, params);
+
         assertEquals(requiredTypes.size(), 2);
 
         NodeList<Expression> knownRequiredTypes = new NodeList<>();
@@ -102,10 +117,11 @@ public class TestMutationHelpers {
 
     @Test
     @DisplayName("Method Implemented")
-    public void testMethodImplemented() {
-        CompilationUnit program = collectAndParseProgramFromFile(basePath + "MethodImplemented.java");
+    public void testMethodImplemented() throws IOException {
+        CompilationUnit program = collectAndParseProgramFromFile(new File(Objects.requireNonNull(classLoader.getResource( basePath + "MethodImplemented.java")).getFile()));
+
         List<MethodDeclaration> methodDeclarations = new ArrayList<>(program.findAll(MethodDeclaration.class));
-        assertEquals(methodDeclarations.size(), 5);
+        assertEquals(methodDeclarations.size(), 6);
 
         // Interface :: Static and Non-Static
         assertTrue(MutationHelpers.methodImplemented(methodDeclarations.get(0)));
@@ -122,19 +138,22 @@ public class TestMutationHelpers {
 
     @Test
     @DisplayName("Resolve Collection in program")
-    public void testResolveCollection() {
-        CompilationUnit program = collectAndParseProgramFromFile(basePath + "ResolveCollection.java");
+    public void testResolveCollection() throws IOException {
+        CompilationUnit program = collectAndParseProgramFromFile(new File(Objects.requireNonNull(classLoader.getResource( basePath + "ResolveCollection.java")).getFile()));
+
         List<ReturnStmt> returnStmts = new ArrayList<>(program.findAll(ReturnStmt.class));
         assertEquals(returnStmts.size(), 1);
 
         ReturnStmt node = returnStmts.get(0);
-        assertEquals(MutationHelpers.resolveCollection(node, "String").size(), 2);
+        assertEquals(MutationHelpers.resolveCollection(node, "int").size(), 2);
     }
+
 
     @Test
     @DisplayName("Resolve All Types in program")
-    public void testResolveAllTypes() {
-        CompilationUnit program = collectAndParseProgramFromFile(basePath + "ResolveAllTypes.java");
+    public void testResolveAllTypes() throws IOException {
+        CompilationUnit program = collectAndParseProgramFromFile(new File(Objects.requireNonNull(classLoader.getResource( basePath + "ResolveAllTypes.java")).getFile()));
+
         List<ReturnStmt> returnStmts = new ArrayList<>(program.findAll(ReturnStmt.class));
         assertEquals(returnStmts.size(), 1);
 
@@ -147,25 +166,28 @@ public class TestMutationHelpers {
         assertTrue(resolveTypes.containsKey("int"));
     }
 
+
     @Test
     @DisplayName("Get all children of binary expressions")
-    public void testGetChildrenOfExpressions() {
-        CompilationUnit program = collectAndParseProgramFromFile(basePath + "ChildrenOfExpression.java");
+    public void testGetChildrenOfExpressions() throws IOException {
+        CompilationUnit program = collectAndParseProgramFromFile(new File(Objects.requireNonNull(classLoader.getResource( basePath + "ChildrenOfExpression.java")).getFile()));
+
         List<ReturnStmt> returnStmts = new ArrayList<>(program.findAll(ReturnStmt.class));
         assertEquals(returnStmts.size(), 1);
 
         ReturnStmt node = returnStmts.get(0);
-        List<Node> children = MutationHelpers.getChildrenOfExpression(node);
+        assertTrue(node.getExpression().isPresent());
 
+        List<Node> children = MutationHelpers.getChildrenOfExpression(node.getExpression().get());
         assertEquals(children.size(), 2);
     }
 
     @Test
     @DisplayName("Get all statement expressions in program")
-    public void testStatementExpressions() {
-        CompilationUnit program = collectAndParseProgramFromFile(basePath + "StatementExpressions.java");
+    public void testStatementExpressions() throws IOException {
+        CompilationUnit program = collectAndParseProgramFromFile(new File(Objects.requireNonNull(classLoader.getResource( basePath + "StatementExpressions.java")).getFile()));
+        
         List<Expression> statementExpressions = MutationHelpers.collectStatementExpressions(program);
-
         assertEquals(statementExpressions.size(), 2);
     }
 }

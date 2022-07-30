@@ -1,6 +1,8 @@
 package Util;
 
+import GP.GP.AbstractSyntaxTree;
 import com.github.javaparser.Position;
+import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
@@ -11,6 +13,9 @@ import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.WhileStmt;
 import com.github.javaparser.resolution.declarations.ResolvedConstructorDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
+import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
+import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -123,12 +128,42 @@ public final class MutationHelpers {
         List<Expression> expressions = new ArrayList<>();
 
         expressions.addAll(resolveLocalTypes(node, resolvedType));
-        expressions.addAll(resolveMethodDeclarations(node, resolvedType));
-        expressions.addAll(resolveObjectCreationExpr(node, resolvedType));
-        expressions.addAll(resolveFieldAccessExpr(node, resolvedType));
+
+        // For each relevant class in the Defects4J bug
+        for (Path relevantClass : AbstractSyntaxTree.relevantPaths) {
+            CompilationUnit currentProgram;
+
+            try {
+                StaticJavaParser.getConfiguration().setSymbolResolver(new JavaSymbolSolver(AbstractSyntaxTree.combinedTypeSolver));
+                currentProgram = StaticJavaParser.parse(relevantClass);
+            } catch (Exception ex) { continue; }
+
+            expressions.addAll(resolveMethodDeclarations(currentProgram, node, resolvedType));
+            expressions.addAll(resolveObjectCreationExpr(currentProgram, node, resolvedType));
+            expressions.addAll(resolveFieldAccessExpr(currentProgram, node, resolvedType));
+            expressions.addAll(resolveAllEnumDeclarations(currentProgram, resolvedType));
+        }
 
         return expressions;
     }
+
+    public static List<Expression> reflectionConstructorResolving(Node node, ResolvedReferenceTypeDeclaration resolvedReferenceTypeDeclaration) {
+        List<Expression> expressions = new ArrayList<>();
+
+        resolvedReferenceTypeDeclaration.getConstructors().forEach(constructor -> {
+            // Fill the parameters for each constructor
+            ObjectCreationExpr newOCE = new ObjectCreationExpr().setType(constructor.getClassName());
+            NodeList<Expression> arguments = MutationHelpers.getRequiredTypes(node, MutationHelpers.getConstructorParams(constructor));
+
+            if (arguments != null) {
+                newOCE.setArguments(arguments);
+                expressions.add(newOCE);
+            }
+        });
+
+        return expressions;
+    }
+
 
     /**
      * Resolve all expressions in the local scope of a given node including;
@@ -143,18 +178,6 @@ public final class MutationHelpers {
      */
     public static List<Expression> resolveLocalTypes(Node node, String resolvedType) {
         List<Expression> expressions = new ArrayList<>();
-
-        node.findCompilationUnit().ifPresent(cu -> {
-            // Get enum declarations in Compilation Unit scope
-            cu.findAll(EnumDeclaration.class).forEach(ed -> {
-                if (ed.resolve().getClassName().equals(resolvedType)) {
-                    for (EnumConstantDeclaration enumConstant : ed.getEntries()) {
-                        // Create FieldAccessExpr and give enum constant value e.g. Person.ALIVE;
-                        expressions.add(new FieldAccessExpr().setScope(ed.getNameAsExpression()).setName(enumConstant.getName()));
-                    }
-                }
-            });
-        });
 
         node.findAncestor(ClassOrInterfaceDeclaration.class).ifPresent(coid -> {
             // Get all field variables
@@ -217,60 +240,58 @@ public final class MutationHelpers {
      * @param resolvedType      A String type for the expressions in scope we are trying to collect
      * @return                  A list of expressions of the required type that could be resolved in scope of the given node
      */
-    public static List<Expression> resolveMethodDeclarations(Node node, String resolvedType) {
+    public static List<Expression> resolveMethodDeclarations(CompilationUnit cu, Node node, String resolvedType) {
         List<Expression> expressions = new ArrayList<>();
         String nodeMethodSignature = node.findAncestor(MethodDeclaration.class).isPresent() ? node.findAncestor(MethodDeclaration.class).get().resolve().getQualifiedSignature() : null;
 
-        node.findCompilationUnit().ifPresent(cu -> {
-            // Get all methods in the CompilationUnit with same return type and resolve parameters
-            cu.findAll(MethodDeclaration.class).forEach(md -> {
-                // If the return type of the method call matches and the signature must not equal the signature of the method the node is in, otherwise we could get a recursion issue
-                if (md.resolve().getReturnType().describe().equals(resolvedType) && !md.resolve().getQualifiedSignature().equals(nodeMethodSignature) && methodImplemented(md)) {
-                    // Create a method call expression and resolve types
-                    MethodCallExpr currentMCE = new MethodCallExpr().setName(md.resolve().getName());
-                    List<String> methodParameters = getMethodParams(md.resolve());
-                    NodeList<Expression> arguments = getRequiredTypes(node, methodParameters);
+        // Get all methods in the CompilationUnit with same return type and resolve parameters
+        cu.findAll(MethodDeclaration.class).forEach(md -> {
+            // If the return type of the method call matches and the signature must not equal the signature of the method the node is in, otherwise we could get a recursion issue
+            if (md.resolve().getReturnType().describe().equals(resolvedType) && !md.resolve().getQualifiedSignature().equals(nodeMethodSignature) && methodImplemented(md)) {
+                // Create a method call expression and resolve types
+                MethodCallExpr currentMCE = new MethodCallExpr().setName(md.resolve().getName());
+                List<String> methodParameters = getMethodParams(md.resolve());
+                NodeList<Expression> arguments = getRequiredTypes(node, methodParameters);
 
-                    // If arguments are non-null then replace original arguments
-                    if (arguments != null) {
-                        currentMCE.setArguments(arguments);
-                    } else {
-                        return;
-                    }
+                // If arguments are non-null then replace original arguments
+                if (arguments != null) {
+                    currentMCE.setArguments(arguments);
+                } else {
+                    return;
+                }
 
-                    // If the methodDeclaration is a local method to nodeFrom e.g. TestMutation.method1() -> where nodeFrom is in TestMutation class
-                    ClassOrInterfaceDeclaration coid = node.findAncestor(ClassOrInterfaceDeclaration.class).isPresent() ? node.findAncestor(ClassOrInterfaceDeclaration.class).get() : null;
-                    if (coid == null) { return; }
+                // If the methodDeclaration is a local method to nodeFrom e.g. TestMutation.method1() -> where nodeFrom is in TestMutation class
+                ClassOrInterfaceDeclaration coid = node.findAncestor(ClassOrInterfaceDeclaration.class).isPresent() ? node.findAncestor(ClassOrInterfaceDeclaration.class).get() : null;
+                if (coid == null) { return; }
 
-                    String className = coid.resolve().getClassName();
-                    if (className != null && md.resolve().getClassName().equals(className)) {
-                        expressions.add(currentMCE);
+                String className = coid.resolve().getClassName();
+                if (className != null && md.resolve().getClassName().equals(className)) {
+                    expressions.add(currentMCE);
 
                     // If the methodDeclaration is static then resolve via static methods
-                    } else if (md.resolve().isStatic()) {
-                        // Add Class or Interface name + method name
-                        expressions.add(new FieldAccessExpr().setScope(new NameExpr(md.resolve().getClassName())).setName(String.valueOf(currentMCE)).clone());
+                } else if (md.resolve().isStatic()) {
+                    // Add Class or Interface name + method name
+                    expressions.add(new FieldAccessExpr().setScope(new NameExpr(md.resolve().getClassName())).setName(String.valueOf(currentMCE)).clone());
 
                     // If the methodDeclaration is in another class e.g. Person.getAge() -> where nodeFrom is in TestMutation class
+                } else {
+                    // Check for nodes in nodeFrom's local scope with className of required type e.g. Person
+                    List<Expression> resolvedNodes = resolveLocalTypes(node, md.resolve().getClassName());
+
+                    // If the required node was found in the local scope then create a fieldAccessExpr to combine both the node and method call expr e.g. new Person().getAge()
+                    if (resolvedNodes.size() > 0) {
+                        expressions.add(new FieldAccessExpr().setScope(resolvedNodes.get(MutationHelpers.randomIndex(resolvedNodes.size()))).setName(String.valueOf(currentMCE)));
+
+                    // No object of type found in local scope, create a fieldAccessExpr using a constructor of required type e.g. new Person().getAge()
                     } else {
-                        // Check for nodes in nodeFrom's local scope with className of required type e.g. Person
-                        List<Expression> resolvedNodes = resolveLocalTypes(node, md.resolve().getClassName());
+                        List<Expression> objectCreationExprs = resolveObjectCreationExpr(cu, node, md.resolve().getClassName());
 
-                        // If the required node was found in the local scope then create a fieldAccessExpr to combine both the node and method call expr e.g. new Person().getAge()
-                        if (resolvedNodes.size() > 0) {
-                                expressions.add(new FieldAccessExpr().setScope(resolvedNodes.get(MutationHelpers.randomIndex(resolvedNodes.size()))).setName(String.valueOf(currentMCE)));
-
-                        // No object of type found in local scope, create a fieldAccessExpr using a constructor of required type e.g. new Person().getAge()
-                        } else {
-                            List<Expression> objectCreationExprs = resolveObjectCreationExpr(node, md.resolve().getClassName());
-
-                            if (objectCreationExprs.size() > 0) {
-                                expressions.add(new FieldAccessExpr().setScope(objectCreationExprs.get(MutationHelpers.randomIndex(objectCreationExprs.size()))).setName(String.valueOf(currentMCE)).clone());
-                            }
+                        if (objectCreationExprs.size() > 0) {
+                            expressions.add(new FieldAccessExpr().setScope(objectCreationExprs.get(MutationHelpers.randomIndex(objectCreationExprs.size()))).setName(String.valueOf(currentMCE)).clone());
                         }
                     }
                 }
-            });
+            }
         });
 
         return expressions;
@@ -284,10 +305,10 @@ public final class MutationHelpers {
      * @param className     The name of the class we are trying to find overloaded constructors for
      * @return              A list of expressions that contain each resolved constructor for the given className
      */
-    public static List<Expression> resolveObjectCreationExpr(Node node, String className) {
+    public static List<Expression> resolveObjectCreationExpr(CompilationUnit cu, Node node, String className) {
         List<Expression> expressions = new ArrayList<>();
 
-        node.findCompilationUnit().ifPresent(cu -> cu.getClassByName(className).ifPresent(i -> {
+        cu.getClassByName(className).ifPresent(i -> {
             // If the class has a default constructor
             if (i.getConstructors().size() >= 1) {
                 i.getConstructors().forEach(constructor -> {
@@ -305,7 +326,7 @@ public final class MutationHelpers {
             } else {
                 expressions.add(new ObjectCreationExpr().setType(className));
             }
-        }));
+        });
 
         return expressions;
     }
@@ -317,37 +338,57 @@ public final class MutationHelpers {
      * @param resolvedType      A String type for the expressions in scope we are trying to collect
      * @return                  A list of expressions for field access expressions that could be in different classes and methods
      */
-    public static List<Expression> resolveFieldAccessExpr(Node node, String resolvedType) {
+    public static List<Expression> resolveFieldAccessExpr(CompilationUnit cu, Node node, String resolvedType) {
         List<Expression> expressions = new ArrayList<>();
 
-        node.findCompilationUnit().ifPresent(cu -> {
-            cu.findAll(FieldDeclaration.class).forEach(fd -> {
-                // If local to nodeFrom then ignore as localTypes will catch this
-                String nodeClass = node.findAncestor(ClassOrInterfaceDeclaration.class).isPresent() ? node.findAncestor(ClassOrInterfaceDeclaration.class).get().resolve().getClassName() : null;
-                String fdClass = fd.findAncestor(ClassOrInterfaceDeclaration.class).isPresent() ? fd.findAncestor(ClassOrInterfaceDeclaration.class).get().resolve().getClassName() : null;
-                if (nodeClass == null || fdClass == null || nodeClass.equals(fdClass) || !fd.resolve().getType().describe().equals(resolvedType)) { return; }
+        cu.findAll(FieldDeclaration.class).forEach(fd -> {
+            // If local to nodeFrom then ignore as localTypes will catch this
+            String nodeClass = node.findAncestor(ClassOrInterfaceDeclaration.class).isPresent() ? node.findAncestor(ClassOrInterfaceDeclaration.class).get().resolve().getClassName() : null;
+            String fdClass = fd.findAncestor(ClassOrInterfaceDeclaration.class).isPresent() ? fd.findAncestor(ClassOrInterfaceDeclaration.class).get().resolve().getClassName() : null;
+            if (nodeClass == null || fdClass == null || nodeClass.equals(fdClass) || !fd.resolve().getType().describe().equals(resolvedType)) { return; }
 
-                fd.getVariables().forEach(vd -> {
-                    // If the fd is static or in an interface or abstract class
-                    if (fd.isStatic() || fd.findAncestor(ClassOrInterfaceDeclaration.class).get().isInterface() || fd.findAncestor(ClassOrInterfaceDeclaration.class).get().isAbstract()) {
-                        expressions.add(new FieldAccessExpr().setScope(new NameExpr(fdClass)).setName(vd.getNameAsString()).clone());
-                        return;
+            fd.getVariables().forEach(vd -> {
+                // If the fd is static or in an interface or abstract class
+                if (fd.isStatic() || fd.findAncestor(ClassOrInterfaceDeclaration.class).get().isInterface() || fd.findAncestor(ClassOrInterfaceDeclaration.class).get().isAbstract()) {
+                    expressions.add(new FieldAccessExpr().setScope(new NameExpr(fdClass)).setName(vd.getNameAsString()).clone());
+                    return;
+                }
+
+                // Try and find reference to fdClass in local scope
+                List<Expression> resolvedNodes = resolveLocalTypes(node, fdClass);
+                if (resolvedNodes.size() > 0) {
+                    expressions.add(new FieldAccessExpr().setScope(resolvedNodes.get(MutationHelpers.randomIndex(resolvedNodes.size()))).setName(vd.getNameAsString()));
+
+                // Create a new Object Expr and prepend to field
+                } else {
+                    List<Expression> objectCreationExprs = resolveObjectCreationExpr(cu, node, fdClass);
+                    if (objectCreationExprs.size() > 0) {
+                        expressions.add(new FieldAccessExpr().setScope(objectCreationExprs.get(MutationHelpers.randomIndex(objectCreationExprs.size()))).setName(vd.getNameAsString()));
                     }
-
-                    // Try and find reference to fdClass in local scope
-                    List<Expression> resolvedNodes = resolveLocalTypes(node, fdClass);
-                    if (resolvedNodes.size() > 0) {
-                        expressions.add(new FieldAccessExpr().setScope(resolvedNodes.get(MutationHelpers.randomIndex(resolvedNodes.size()))).setName(vd.getNameAsString()));
-
-                    // Create a new Object Expr and prepend to field
-                    } else {
-                        List<Expression> objectCreationExprs = resolveObjectCreationExpr(node, fdClass);
-                        if (objectCreationExprs.size() > 0) {
-                            expressions.add(new FieldAccessExpr().setScope(objectCreationExprs.get(MutationHelpers.randomIndex(objectCreationExprs.size()))).setName(vd.getNameAsString()));
-                        }
-                    }
-                });
+                }
             });
+        });
+
+        return expressions;
+    }
+
+    /**
+     *
+     * @param cu
+     * @param resolvedType
+     * @return
+     */
+    public static List<Expression> resolveAllEnumDeclarations(CompilationUnit cu, String resolvedType) {
+        List<Expression> expressions = new ArrayList<>();
+
+        // Get enum declarations in each Compilation Unit
+        cu.findAll(EnumDeclaration.class).forEach(ed -> {
+            if (ed.resolve().getClassName().equals(resolvedType)) {
+                for (EnumConstantDeclaration enumConstant : ed.getEntries()) {
+                    // Create FieldAccessExpr and give enum constant value e.g. Person.ALIVE;
+                    expressions.add(new FieldAccessExpr().setScope(ed.getNameAsExpression()).setName(enumConstant.getName()));
+                }
+            }
         });
 
         return expressions;
@@ -360,23 +401,27 @@ public final class MutationHelpers {
      * @return       A HashMap of String types to a List of expressions that have that type
      */
     public static HashMap<String, List<Expression>> resolveAllTypes(Node node) {
+
         HashMap<String, List<Expression>> typeToExpressionMap = new HashMap<>();
         HashSet<String> cuTypes = new HashSet<>();
 
         // Add all class names, method return types for declarations and calls, variable declarations, enum declarations
         node.findCompilationUnit().ifPresent(cu -> {
-            cu.findAll(ClassOrInterfaceDeclaration.class).forEach(coid -> cuTypes.add(coid.resolve().getClassName()));
-            cu.findAll(ObjectCreationExpr.class).forEach(oce -> cuTypes.add(oce.resolve().getClassName()));
-            cu.findAll(MethodDeclaration.class).forEach(md -> cuTypes.add(md.resolve().getReturnType().describe()));
-            cu.findAll(MethodCallExpr.class).forEach(mce -> cuTypes.add(mce.resolve().getReturnType().describe()));
-            cu.findAll(Parameter.class).forEach(parameter -> cuTypes.add(parameter.resolve().getType().describe()));
-            cu.findAll(VariableDeclarator.class).forEach (vd -> cuTypes.add(vd.resolve().getType().describe()));
-            cu.findAll(EnumDeclaration.class).forEach(ed -> cuTypes.add(ed.resolve().getClassName()));
-            cu.findAll(FieldAccessExpr.class).forEach(fae -> cuTypes.add(fae.resolve().getType().describe()));
+            cu.findAll(ClassOrInterfaceDeclaration.class).forEach(coid -> { try { cuTypes.add(coid.resolve().getClassName()); } catch (Exception ignored) {}});
+            cu.findAll(ObjectCreationExpr.class).forEach(oce -> { try { cuTypes.add(oce.resolve().getClassName()); } catch (Exception ignored) {}});
+            cu.findAll(MethodDeclaration.class).forEach(md -> { try { cuTypes.add(md.resolve().getReturnType().describe()); } catch (Exception ignored) {}});
+            cu.findAll(MethodCallExpr.class).forEach(mce -> { try { cuTypes.add(mce.resolve().getReturnType().describe()); } catch (Exception ignored) {}});
+            cu.findAll(Parameter.class).forEach(parameter -> { try {cuTypes.add(parameter.getTypeAsString());} catch (Exception ignored) {}});
+            cu.findAll(VariableDeclarator.class).forEach (vd -> { try { cuTypes.add(vd.resolve().getType().describe()); } catch (Exception ignored) {}});
+            cu.findAll(EnumDeclaration.class).forEach(ed -> { try { cuTypes.add(ed.resolve().getClassName()); } catch (Exception ignored) {}});
+            cu.findAll(FieldAccessExpr.class).forEach(fae -> { try { cuTypes.add(fae.resolve().getType().describe()); } catch (Exception ignored) {}});
         });
 
         // Resolve all types
-        for (String type : cuTypes) { typeToExpressionMap.put(type, resolveCollection(node, type)); }
+        for (String type : cuTypes) {
+            try { typeToExpressionMap.put(type, resolveCollection(node, type)); }
+            catch (Exception ignored) {}
+        }
 
         return typeToExpressionMap;
     }
@@ -396,7 +441,7 @@ public final class MutationHelpers {
             expressions.add(node);
             return expressions;
 
-        // If this is binary expression is not seperated by && or || then add the left and right nodes as we have children in those nodes
+            // If this is binary expression is not seperated by && or || then add the left and right nodes as we have children in those nodes
         } else if (node instanceof BinaryExpr) {
             BinaryExpr binaryExpr = (BinaryExpr) node;
 

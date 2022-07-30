@@ -1,11 +1,16 @@
 package Util;
 
+import GP.GP.AbstractSyntaxTree;
 import com.github.javaparser.ast.CompilationUnit;
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -50,12 +55,22 @@ public final class ProjectPaths {
 
         String modifiedClass = prop.getProperty("d4j.classes.modified");
         String pathToClasses = prop.getProperty("d4j.dir.src.classes");
+        String relevantClasses = prop.getProperty("d4j.classes.relevant");
 
         // Ensure properties are not null, the modified class has a length of one, relevant bugs include the modified bug, srcPath + modifiedBug exists
-        if (modifiedClass == null || pathToClasses == null) {
-            throw new NullPointerException("Could not read 'defects4j.build.properties' file correctly"); }
+        if (modifiedClass == null || pathToClasses == null || relevantClasses == null)
+            throw new NullPointerException("Could not read 'defects4j.build.properties' file correctly");
 
+        // Assign relevant classes to the Abstract Syntax Tree
+        List<Path> relevantPaths = new ArrayList<>();
+        String[] relevantClassesArray = relevantClasses.split(",");
+        for (String relevantClass : relevantClassesArray) {
+            relevantPaths.add(Paths.get(checkoutPath + "/" + pathToClasses + "/" + relevantClass.replaceAll("\\.", File.separator) + ".java"));
+        }
+
+        AbstractSyntaxTree.relevantPaths = relevantPaths;
         Path modifiedClassPath = Paths.get("/" + pathToClasses + "/" + modifiedClass.replaceAll("\\.", File.separator) + ".java");
+
         if(!Files.exists(Paths.get(checkoutPath + modifiedClassPath))) { throw new Exception("Could not find the modified class path '" + modifiedClassPath +"'"); }
 
         return modifiedClassPath;
@@ -74,6 +89,36 @@ public final class ProjectPaths {
         if(!Files.exists(patchPath)) { throw new IOException("Could not find the patch file at '" + patchPath + "'"); }
 
         return patchPath;
+    }
+
+    /**
+     * Gets the fixed Defects4J bug by checking out the required project and returning a string representation of the fixed class.
+     *
+     * @param identifier    Defects4j project file name e.g. Lang or Closure
+     * @param bid           Unique id of the Defects4j bug
+     * @return              The fixed program in a string format
+     * @throws Exception    If the fixed project path cannot be copied
+     */
+    public static String getFixedBugFromDefects4j(String identifier, int bid) throws Exception {
+        Path checkoutPath = Paths.get("/tmp/checkout/fixed/" + identifier + "_" + bid + "/");
+
+        // Checkout the bug
+        ShellProcessBuilder.runCommand(new String[] { "perl", "defects4j", "checkout", "-p", identifier, "-v", bid + "f", "-w", checkoutPath.toString() });
+
+        // Read the bug into the AST so that I can remove comments
+        Properties prop;
+        try {
+            prop = new Properties();
+            prop.load(Files.newInputStream(Paths.get(checkoutPath + "/defects4j.build.properties")));
+        } catch (FileNotFoundException ex) { throw new Exception("'defects4j.build.properties' file not found suggesting '" + checkoutPath + "' was not fetched correctly"); }
+
+        Path fixedFilePath = Paths.get(checkoutPath + prop.getProperty("d4j.classes.modified"));
+        String fixedProgramAsString = AbstractSyntaxTree.generateAST(fixedFilePath, "", "").toString();
+
+        // Remove the checked out directory
+        FileUtils.deleteDirectory(checkoutPath.toFile());
+
+        return fixedProgramAsString;
     }
 
     /**

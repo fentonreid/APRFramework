@@ -21,8 +21,8 @@ public final class Util {
         // Get the pre- and post-files from the respective resources folder
         ClassLoader classLoader = Util.class.getClassLoader();
 
-        CompilationUnit preProgram  = AbstractSyntaxTree.generateAST(new File(Objects.requireNonNull(classLoader.getResource( prePath + testName + ".java")).getFile()).toPath(), "");
-        CompilationUnit postProgram = AbstractSyntaxTree.generateAST(new File(Objects.requireNonNull(classLoader.getResource( postPath + testName + ".java")).getFile()).toPath(), "");
+        CompilationUnit preProgram  = AbstractSyntaxTree.generateAST(new File(Objects.requireNonNull(classLoader.getResource( prePath + testName + ".java")).getFile()).toPath(), "", "");
+        CompilationUnit postProgram = AbstractSyntaxTree.generateAST(new File(Objects.requireNonNull(classLoader.getResource( postPath + testName + ".java")).getFile()).toPath(), "", "");
 
         String actualPostProgram = removeCompilationUnitWhitespace(postProgram.clone());
 

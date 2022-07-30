@@ -71,7 +71,7 @@ public final class CSVOutput {
 
         if (iterationString.equals(String.valueOf(iteration)) && iterationDetails.size() != 1) { iterationDetails.add(new String[]{""}); }
 
-        iterationDetails.add(new String[]{"", "", iterationString,mutationOperator,
+        iterationDetails.add(new String[]{"", "", iterationString, mutationOperator,
                                   String.valueOf(numberOfPatchesFound),
                                   passesAllTests.equals("") ? "YES" : passesAllTests,
                                   String.valueOf(totalTimeTaken)

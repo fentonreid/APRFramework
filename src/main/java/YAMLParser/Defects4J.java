@@ -96,7 +96,7 @@ public class Defects4J {
         HashMap<String, HashSet<Integer>> validBugs = new HashMap<>();
 
         // Need project ids
-        ArrayList<String> defect4jIdentifiers = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "pids"});
+        ArrayList<String> defect4jIdentifiers = new ArrayList<>(ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "pids"}));
 
         for (String identifier : defect4jIdentifiers) {
             HashSet<Integer> bids = new HashSet<>();
@@ -110,7 +110,7 @@ public class Defects4J {
 
                 if (split.length != 3) { continue; }
 
-                String modifiedClass = split[1].replaceAll("\"", ""); //.substring(1,split[1].length()-1);
+                String modifiedClass = split[1].replaceAll("\"", "");
                 String relevantClasses = split[2];
 
                 // Ensure the number of modified classes to achieve the patch is one

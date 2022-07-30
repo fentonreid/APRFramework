@@ -1,9 +1,13 @@
 package Util;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * The ShellProcessBuilder class creates process builders that can interact with the systems command line to interact with the Defects4j cli.
@@ -17,16 +21,14 @@ public final class ShellProcessBuilder {
      * @return              A process object is returned that can be manipulated further if needed
      * @throws Exception    If the process builder cannot be created
      */
-    public static Process runCommand(String[] command) throws Exception {
+    public static void runCommand(String[] command) throws Exception {
         try {
             ProcessBuilder ps = new ProcessBuilder(command);
             ps.directory(new File("../defects4j/framework/bin/"));
-            Process runningProcess =  ps.start();
+            ps.redirectError(new File("error_shell"));
+            ps.redirectOutput(new File("output_shell"));
 
-            BufferedReader errorInput = new BufferedReader(new InputStreamReader(runningProcess.getErrorStream()));
-            while (errorInput.readLine() != null) {}
-
-            return runningProcess;
+            ps.start().waitFor();
 
         } catch (NullPointerException | IndexOutOfBoundsException ex) {
             throw new Exception("The command passed is empty or contains null, consult the defects4j github examples for valid command user or man pages is using a bash command");
@@ -45,16 +47,14 @@ public final class ShellProcessBuilder {
      * @return                      A process object is returned that can be manipulated further if needed
      * @throws Exception            If the process builder cannot be created
      */
-    public static Process runCommand(String[] command, File workingDirectory) throws Exception {
+    public static void runCommand(String[] command, File workingDirectory) throws Exception {
         try {
             ProcessBuilder ps = new ProcessBuilder(command);
             ps.directory(workingDirectory);
-            Process runningProcess =  ps.start();
+            ps.redirectError(new File("error_shell"));
+            ps.redirectOutput(new File("output_shell"));
 
-            BufferedReader errorInput = new BufferedReader(new InputStreamReader(runningProcess.getErrorStream()));
-            while (errorInput.readLine() != null) {}
-
-            return runningProcess;
+            ps.start().waitFor();
 
         } catch (NullPointerException | IndexOutOfBoundsException ex) {
             throw new Exception("The command passed is empty or contains null, consult the defects4j github examples for valid command user or man pages is using a bash command");
@@ -73,36 +73,23 @@ public final class ShellProcessBuilder {
      * @throws Exception        If no standard input was recorded
      */
     public static ArrayList<String> getStandardInput(String[] command) throws Exception {
-        try {
-            Process runningProcess = ShellProcessBuilder.runCommand(command);
-            return getStrings(runningProcess);
+        ProcessBuilder ps = new ProcessBuilder(command);
 
-        } catch (Exception ex) {
-            throw new Exception("Command '" + Arrays.toString(command) + "' failed no standard input was recorded" + " " + ex);
-        }
-    }
+        ps.directory(new File("../defects4j/framework/bin/"));
+        ps.redirectError(new File("error_shell"));
 
-    /**
-     * The standard input of the process is returned in an ArrayList.
-     *
-     * @param runningProcess    A String array that specifies the command for the process builder to execute
-     * @return                  An ArrayList of strings for each line of Standard input recorded
-     * @throws Exception        If no standard input was recorded
-     */
-    private static ArrayList<String> getStrings(Process runningProcess) throws IOException, InterruptedException {
-        BufferedReader standardInput = new BufferedReader(new InputStreamReader(runningProcess.getInputStream()));
-        ArrayList<String> result = new ArrayList<>();
+        Process runningProcess = ps.start();
+        ArrayList<String> output = new ArrayList<>();
 
-        String line;
-        while ((line = standardInput.readLine()) != null)
-            if (!line.equals("")) {
-                result.add(line);
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(runningProcess.getInputStream()))) {
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                output.add(line);
             }
+        }
 
-        // WAIT for 60 seconds then fail
-        runningProcess.waitFor(60, TimeUnit.SECONDS);
-
-        if (result.size() < 1) { throw new IOException("No standard input was recorded"); }
-        return result;
+        runningProcess.waitFor();
+        return output;
     }
 }

@@ -23,7 +23,7 @@ public final class ValidDefectsPatches {
             for (int bid : bids) {
                 // Checkout the bug
                 String checkoutPath = "/tmp/" + identifier + "_" + bid + "/";
-                ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", identifier, "-v", bid + "b", "-w", checkoutPath}).waitFor();
+                ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "checkout", "-p", identifier, "-v", bid + "b", "-w", checkoutPath});
 
                 // Ensure bug is valid
                 try { ProjectPaths.getBuggyProgramPath(checkoutPath); }

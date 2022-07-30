@@ -38,9 +38,9 @@ public final class GNR {
         // Collect all listed nodes from the compilation unit
         List<Node> nodes = new ArrayList<>(collectExpressions(program));
 
-        // Get random node from subset
         if (nodes.size() == 0) { throw new UnmodifiedProgramException("None of the required nodes could be found in the Compilation Unit"); }
         Node nodeFrom = nodes.get(MutationHelpers.randomIndex(nodes.size()));
+
         Node nodeTo = null;
 
         // Determine the node to change to
@@ -58,6 +58,7 @@ public final class GNR {
 
             case "ObjectCreationExpr":
                 expressions = MutationHelpers.resolveCollection(nodeFrom, ((ObjectCreationExpr) nodeFrom).resolve().getClassName());
+                expressions.addAll(MutationHelpers.reflectionConstructorResolving(nodeFrom, ((ObjectCreationExpr) nodeFrom).resolve().declaringType()));
                 if (expressions.size() > 0) { nodeTo = expressions.get(MutationHelpers.randomIndex(expressions.size())); }
                 break;
 
@@ -67,7 +68,7 @@ public final class GNR {
                 break;
 
             case "ReturnStmt":
-                String type = ((ReturnStmt) nodeFrom).getExpression().isPresent()? ((ReturnStmt) nodeFrom).getExpression().get().calculateResolvedType().describe() : null;
+                String type = ((ReturnStmt) nodeFrom).getExpression().isPresent() ? ((ReturnStmt) nodeFrom).getExpression().get().calculateResolvedType().describe() : null;
 
                 if (type == null) {
                     if (nodeFrom.findAncestor(MethodDeclaration.class).isPresent())
@@ -81,7 +82,6 @@ public final class GNR {
         }
 
         if(nodeTo != null) { nodeFrom.replace(nodeTo); }
-
         return program.clone();
     }
 
@@ -93,9 +93,10 @@ public final class GNR {
      */
     private static List<Node> collectExpressions(CompilationUnit cu) {
         List<Node> nodes = new ArrayList<>();
+
+        nodes.addAll(cu.findAll(ObjectCreationExpr.class));
         nodes.addAll(cu.findAll(MethodCallExpr.class));
         nodes.addAll(cu.findAll(FieldAccessExpr.class));
-        nodes.addAll(cu.findAll(ObjectCreationExpr.class));
         nodes.addAll(cu.findAll(VariableDeclarator.class));
         nodes.addAll(cu.findAll(ReturnStmt.class));
 

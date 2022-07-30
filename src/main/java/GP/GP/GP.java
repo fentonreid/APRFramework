@@ -138,7 +138,7 @@ public final class GP {
 
                     // Check to make sure all test cases are passed if not don't add to valid patches
                     Files.write(Paths.get(programPath + "/1/" +  buggyProgramPath), fittestProgram.toString().getBytes());
-                    ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath+"/1/"}).waitFor();
+                    ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath+"/1/"});
                     ArrayList<String> testResults = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "test", "-w", programPath+"/1/"});
 
                     if (testResults.size() == 1) {
@@ -150,6 +150,7 @@ public final class GP {
 
             // High fitness values of 10_000, which is the default value given to mutations that fail have a 75% chance of being left unmodified
             for (int i=0; i<populationSize; i++) {
+                System.out.println("population size: " + i);
                 if (fitnessResults.get(i) >= 10_000 && Math.random() < 0.75) {
                     population.set(i, ast.clone());
                 }

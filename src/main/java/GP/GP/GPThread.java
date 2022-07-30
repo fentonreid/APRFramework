@@ -46,15 +46,15 @@ public final class GPThread extends Thread {
                 ProjectPaths.writeToFile(Paths.get(buggyProgramPath), program.toString());
 
                 // Defects4j compile checked out program
-                Process test = ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath});
-
-                BufferedReader errorInput = new BufferedReader(new InputStreamReader(test.getErrorStream()));
-                while (errorInput.readLine() != null) {}
-                test.waitFor();
+                ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath});
 
                 // Defects4j run tests on program
                 ArrayList<String> testResults = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "test", "-r", "-w", programPath});
-                testResults.remove(0);
+                if (testResults.size() > 0) {
+                    System.out.println("TEST RESULTS:" + testResults.get(0));
+                    testResults.remove(0); }
+                else {
+                    throw new IOException(); }
 
                 System.out.println("NO ERROR HAS OCCURRED:");
                 fitnessResults.add(testResults.size());
