@@ -100,19 +100,21 @@ public final class ProjectPaths {
      * @throws Exception    If the fixed project path cannot be copied
      */
     public static String getFixedBugFromDefects4j(String identifier, int bid) throws Exception {
-        Path checkoutPath = Paths.get("/tmp/checkout/fixed/" + identifier + "_" + bid + "/");
-
         // Checkout the bug
+        Path checkoutPath = Paths.get("/tmp/checkout/fixed/" + identifier + "_" + bid + "/");
         ShellProcessBuilder.runCommand(new String[] { "perl", "defects4j", "checkout", "-p", identifier, "-v", bid + "f", "-w", checkoutPath.toString() });
 
-        // Read the bug into the AST so that I can remove comments
         Properties prop;
         try {
             prop = new Properties();
             prop.load(Files.newInputStream(Paths.get(checkoutPath + "/defects4j.build.properties")));
         } catch (FileNotFoundException ex) { throw new Exception("'defects4j.build.properties' file not found suggesting '" + checkoutPath + "' was not fetched correctly"); }
 
-        Path fixedFilePath = Paths.get(checkoutPath + prop.getProperty("d4j.classes.modified"));
+        String pathToClasses = prop.getProperty("d4j.dir.src.classes");
+        String modifiedClass = prop.getProperty("d4j.classes.modified").replaceAll("\\.", File.separator);
+
+        // Read the bug into the AST so that I can remove comments
+        Path fixedFilePath = Paths.get(checkoutPath + "/" + pathToClasses +  "/" +  modifiedClass + ".java");
         String fixedProgramAsString = AbstractSyntaxTree.generateAST(fixedFilePath, "", "").toString();
 
         // Remove the checked out directory

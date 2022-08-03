@@ -76,6 +76,8 @@ public final class GPRunner {
                     ArrayList<CompilationUnit> patches = new ArrayList<>();
 
                     for (int i = 1; i <= ParserRunner.gp.iterationsPerBug; i++) {
+                        System.out.println("STARTING TO RUN FOR GP: " + mutationOperator + ": "  + identifier + " " + bid + " :" + i);
+
                         long startIterationTime = System.nanoTime();
                         CompilationUnit buggyAST = AbstractSyntaxTree.generateAST(Paths.get(checkoutPath + buggyFilePath), checkoutPath, sourceDirectory);
 

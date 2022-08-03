@@ -1,29 +1,27 @@
 gp:
   generations: 10
-  populationSize: 100
+  populationSize: 50
   mutationRate: 1
   mutationOperators:
-    - GNR
-  iterationsPerBug: 2
+    - LRR
+  iterationsPerBug: 10
   numberOfThreads: 1
 
 defects4j:
   testCaseSelection:
     method: identifier
     selection:
-      #PASS LRRemoval Compress: [31]
-      #PASS LRRelocation Closure: [13]
-      #PASS BEM (may be overfit) BEM Closure: [62]
-      #PASS BERReduction Closure 18
-      #TRYING BERExpansion Closure 113
-      #TRYING GNR Lang 26
-
-      Lang: [26]
-
+      Compress: [27, 31]
+      Cli: [19, 32]
+      Closure: [6, 11, 13, 46, 78, 102, 115, 117, 126]
+      Jsoup: [24, 40, 49, 64]
+      Lang: [10, 53]
+      Math: [50]
+      JacksonDatabind: [83, 102]
 
 output:
   csv: summary
   javadoc: false
   uploadToPatchViewer: false
-  uploadToGeneratePatches: false
+  uploadToGeneratePatches: true
   gp: true

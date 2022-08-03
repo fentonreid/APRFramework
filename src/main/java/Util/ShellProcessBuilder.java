@@ -1,13 +1,10 @@
 package Util;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * The ShellProcessBuilder class creates process builders that can interact with the systems command line to interact with the Defects4j cli.
@@ -23,12 +20,16 @@ public final class ShellProcessBuilder {
      */
     public static void runCommand(String[] command) throws Exception {
         try {
-            ProcessBuilder ps = new ProcessBuilder(command);
-            ps.directory(new File("../defects4j/framework/bin/"));
-            ps.redirectError(new File("error_shell"));
-            ps.redirectOutput(new File("output_shell"));
+            List<String> updatedCommand = new ArrayList<>(Arrays.asList(command));
+            updatedCommand.add(">");
+            updatedCommand.add("/dev/null");
+            updatedCommand.add("2>&1");
 
-            ps.start().waitFor();
+            ProcessBuilder ps = new ProcessBuilder(updatedCommand);
+            ps.directory(new File("../defects4j/framework/bin/"));
+
+            Process runningProcess = ps.start();
+            runningProcess.waitFor();
 
         } catch (NullPointerException | IndexOutOfBoundsException ex) {
             throw new Exception("The command passed is empty or contains null, consult the defects4j github examples for valid command user or man pages is using a bash command");
@@ -49,12 +50,16 @@ public final class ShellProcessBuilder {
      */
     public static void runCommand(String[] command, File workingDirectory) throws Exception {
         try {
-            ProcessBuilder ps = new ProcessBuilder(command);
-            ps.directory(workingDirectory);
-            ps.redirectError(new File("error_shell"));
-            ps.redirectOutput(new File("output_shell"));
+            List<String> updatedCommand = new ArrayList<>(Arrays.asList(command));
+            updatedCommand.add(">");
+            updatedCommand.add("/dev/null");
+            updatedCommand.add("2>&1");
 
-            ps.start().waitFor();
+            ProcessBuilder ps = new ProcessBuilder(updatedCommand);
+            ps.directory(workingDirectory);
+
+            Process runningProcess = ps.start();
+            runningProcess.waitFor();
 
         } catch (NullPointerException | IndexOutOfBoundsException ex) {
             throw new Exception("The command passed is empty or contains null, consult the defects4j github examples for valid command user or man pages is using a bash command");
@@ -73,23 +78,51 @@ public final class ShellProcessBuilder {
      * @throws Exception        If no standard input was recorded
      */
     public static ArrayList<String> getStandardInput(String[] command) throws Exception {
-        ProcessBuilder ps = new ProcessBuilder(command);
 
+        List<String> updatedCommand = new ArrayList<>(Arrays.asList(command));
+        updatedCommand.add("2>");
+        updatedCommand.add("/dev/null");
+
+        ProcessBuilder ps = new ProcessBuilder(updatedCommand);
         ps.directory(new File("../defects4j/framework/bin/"));
-        ps.redirectError(new File("error_shell"));
 
         Process runningProcess = ps.start();
         ArrayList<String> output = new ArrayList<>();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(runningProcess.getInputStream()));
+        String line;
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(runningProcess.getInputStream()))) {
-            String line;
-
-            while ((line = reader.readLine()) != null) {
-                output.add(line);
-            }
+        while ((line = reader.readLine()) != null) {
+            output.add(line);
         }
 
         runningProcess.waitFor();
         return output;
+    }
+
+    public static String getFailingTestCases(String[] command, String programPath) {
+        try {
+            ProcessBuilder ps = new ProcessBuilder(command);
+            ps.directory(new File(programPath));
+            ps.redirectErrorStream(true);
+
+            Process runningProcess = ps.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(runningProcess.getInputStream()));
+
+            String failingTests = "";
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("Failing tests: ")) {
+                    failingTests = line;
+                }
+            }
+
+            runningProcess.waitFor();
+
+            if (failingTests.contains("Failing tests: "))
+                return failingTests.replaceAll("Failing tests: ", "");
+
+            return null;
+
+        } catch (Exception ex) { return null; }
     }
 }

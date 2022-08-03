@@ -124,9 +124,8 @@ public final class GP {
         int generation = 1;
         while (generation <= generations) {
             ArrayList<Integer> fitnessResults = new ArrayList<>(getFitnessOfPopulation());
-            System.out.println("FITNESS RESULTS: " + fitnessResults);
 
-            // Get index of the max value in the list
+            // Get index of the min value in the list
             int localMinFitness = Collections.min(fitnessResults);
 
             if (localMinFitness < fitnessOfFittestProgram) {
@@ -150,7 +149,6 @@ public final class GP {
 
             // High fitness values of 10_000, which is the default value given to mutations that fail have a 75% chance of being left unmodified
             for (int i=0; i<populationSize; i++) {
-                System.out.println("population size: " + i);
                 if (fitnessResults.get(i) >= 10_000 && Math.random() < 0.75) {
                     population.set(i, ast.clone());
                 }

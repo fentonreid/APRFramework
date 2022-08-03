@@ -1,6 +1,5 @@
 package GP.GP;
 
-import GP.MutationOperators.GNR;
 import Util.ParserRunner;
 import com.github.javaparser.ast.CompilationUnit;
 import java.lang.reflect.InvocationTargetException;
@@ -37,15 +36,14 @@ public final class MutationThread extends Thread {
     public void run() {
         for (CompilationUnit program : population) {
             try {
-                System.out.println("WORKED FINE!");
                 if (Math.random() < ParserRunner.gp.mutationRate) {
                     mutatedPopulation.add((CompilationUnit) mutationOperator.getMethod("mutate", CompilationUnit.class).invoke(mutationOperator, program.clone()));
                 }
 
             } catch (InvocationTargetException ite) {
                 if (ite.getCause() instanceof UnmodifiedProgramException) { System.out.println("Unmodified Program Exception here:\t" + " " + ite.getCause().getMessage()); }
-                else {
-                    System.out.println("Tried to apply a mutation but it failed " + ite.getCause().getMessage() + Arrays.toString(ite.getStackTrace()) + ite.getLocalizedMessage()); }
+                else { System.out.println("Tried to apply a mutation but it failed");}
+                //+ ite.getCause().getMessage() + Arrays.toString(ite.getStackTrace()) + ite.getLocalizedMessage()); }
 
                 mutatedPopulation.add(ast.clone());
 

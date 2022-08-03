@@ -129,24 +129,41 @@ public final class MutationHelpers {
 
         expressions.addAll(resolveLocalTypes(node, resolvedType));
 
+        expressions.addAll(resolveMethodDeclarations(node.findCompilationUnit().get(), node, resolvedType));
+        expressions.addAll(resolveObjectCreationExpr(node.findCompilationUnit().get(), node, resolvedType));
+        expressions.addAll(resolveFieldAccessExpr(node.findCompilationUnit().get(), node, resolvedType));
+        expressions.addAll(resolveAllEnumDeclarations(node.findCompilationUnit().get(), resolvedType));
+
         // For each relevant class in the Defects4J bug
-        for (Path relevantClass : AbstractSyntaxTree.relevantPaths) {
-            CompilationUnit currentProgram;
 
-            try {
-                StaticJavaParser.getConfiguration().setSymbolResolver(new JavaSymbolSolver(AbstractSyntaxTree.combinedTypeSolver));
-                currentProgram = StaticJavaParser.parse(relevantClass);
-            } catch (Exception ex) { continue; }
 
-            expressions.addAll(resolveMethodDeclarations(currentProgram, node, resolvedType));
-            expressions.addAll(resolveObjectCreationExpr(currentProgram, node, resolvedType));
-            expressions.addAll(resolveFieldAccessExpr(currentProgram, node, resolvedType));
-            expressions.addAll(resolveAllEnumDeclarations(currentProgram, resolvedType));
-        }
+        //for (Path relevantClass : AbstractSyntaxTree.relevantPaths) {
+            //CompilationUnit currentProgram;
+
+            //try {
+            //    StaticJavaParser.getConfiguration().setSymbolResolver(new JavaSymbolSolver(AbstractSyntaxTree.combinedTypeSolver));
+            //    currentProgram = StaticJavaParser.parse(relevantClass);
+            //} catch (Exception ex) {
+            //    System.out.println("FAILED TO PARSE CURRENT PROGRAM");
+            //    continue;
+            //}
+
+            //expressions.addAll(resolveMethodDeclarations(currentProgram, node, resolvedType));
+            //expressions.addAll(resolveObjectCreationExpr(currentProgram, node, resolvedType));
+            //expressions.addAll(resolveFieldAccessExpr(currentProgram, node, resolvedType));
+            //expressions.addAll(resolveAllEnumDeclarations(currentProgram, resolvedType));
+        //}
 
         return expressions;
     }
 
+    /**
+     * Reflection type solving can determine classes to that belong to default packages belonging to Java such as; Java.lang or Java.util, in this instance constructors are accessed in this way.
+     *
+     * @param node                                  The node we determine local types for in scope
+     * @param resolvedReferenceTypeDeclaration      The constructor type
+     * @return
+     */
     public static List<Expression> reflectionConstructorResolving(Node node, ResolvedReferenceTypeDeclaration resolvedReferenceTypeDeclaration) {
         List<Expression> expressions = new ArrayList<>();
 
@@ -246,6 +263,7 @@ public final class MutationHelpers {
 
         // Get all methods in the CompilationUnit with same return type and resolve parameters
         cu.findAll(MethodDeclaration.class).forEach(md -> {
+
             // If the return type of the method call matches and the signature must not equal the signature of the method the node is in, otherwise we could get a recursion issue
             if (md.resolve().getReturnType().describe().equals(resolvedType) && !md.resolve().getQualifiedSignature().equals(nodeMethodSignature) && methodImplemented(md)) {
                 // Create a method call expression and resolve types

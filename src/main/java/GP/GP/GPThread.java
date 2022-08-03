@@ -3,9 +3,13 @@ package GP.GP;
 import com.github.javaparser.ast.CompilationUnit;
 import Util.ShellProcessBuilder;
 import Util.ProjectPaths;
+import org.apache.commons.io.FileUtils;
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
@@ -41,29 +45,30 @@ public final class GPThread extends Thread {
      * Each program in the population is copied over, compiled and then tested, the number of failed tests from calling the Defects4j test command is used as the fitness value.
      */
     public void run() {
+        int currentProgramCount = 0;
         for (CompilationUnit program : population) {
             try {
-                ProjectPaths.writeToFile(Paths.get(buggyProgramPath), program.toString());
+                currentProgramCount++;
+
+                ProjectPaths.writeToFile(Paths.get(buggyProgramPath), program.clone().toString());
 
                 // Defects4j compile checked out program
-                ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath});
+                ShellProcessBuilder.runCommand(new String[]{"perl", "/defects4j/framework/bin/defects4j", "compile"}, new File(programPath));
 
                 // Defects4j run tests on program
-                ArrayList<String> testResults = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "test", "-r", "-w", programPath});
-                if (testResults.size() > 0) {
-                    System.out.println("TEST RESULTS:" + testResults.get(0));
-                    testResults.remove(0); }
-                else {
-                    throw new IOException(); }
+                String failingTests = ShellProcessBuilder.getFailingTestCases(new String[] {"perl", "/defects4j/framework/bin/defects4j", "test", "-r"}, programPath);
 
-                System.out.println("NO ERROR HAS OCCURRED:");
-                fitnessResults.add(testResults.size());
+                if (failingTests == null) { fitnessResults.add(10_000); continue; }
+
+                System.out.println(currentProgramCount + " :: NO ERROR HAS OCCURRED, (FAILING TESTS): " + failingTests);
+                fitnessResults.add(Integer.valueOf(failingTests));
 
             } catch (IOException ex) {
                 System.out.println("IO EXCEPTION HAS OCCURRED: " + ex);
                 fitnessResults.add(10_000);
 
-            } catch (Exception ex) { throw new RuntimeException(ex); }
+            } catch (Exception ex) {
+                throw new RuntimeException(ex); }
         }
     }
 
