@@ -5,8 +5,7 @@ import GP.Util;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestLRRelocation {
     String prePath = "MutationOperatorFiles/LRRelocation/Pre/";
@@ -91,15 +90,15 @@ public class TestLRRelocation {
 
     @Test
     @DisplayName("LRRelocation12")
-    public void testLRRelocation12() {
+    public void testLRRelocation12() throws Exception {
         Util.mutationOperator = LRRelocation.class;
-        assertThrows(UnmodifiedProgramException.class, () -> Util.iterationMutationUntilResolved(prePath, postPath, "LRRelocation12"));
+        assertFalse(Util.iterationMutationUntilResolved(prePath, postPath, "LRRelocation12"));
     }
 
     @Test
     @DisplayName("LRRelocation13")
-    public void testLRRelocation13() {
+    public void testLRRelocation13() throws Exception {
         Util.mutationOperator = LRRelocation.class;
-        assertThrows(UnmodifiedProgramException.class, () -> Util.iterationMutationUntilResolved(prePath, postPath, "LRRelocation13"));
+        assertFalse(Util.iterationMutationUntilResolved(prePath, postPath, "LRRelocation13"));
     }
 }

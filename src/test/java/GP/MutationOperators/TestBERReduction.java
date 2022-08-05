@@ -5,8 +5,7 @@ import GP.Util;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestBERReduction {
     String prePath = "MutationOperatorFiles/BERReduction/Pre/";
@@ -35,9 +34,9 @@ public class TestBERReduction {
 
     @Test
     @DisplayName("BERReduction4")
-    public void testBERReduction4() {
+    public void testBERReduction4() throws Exception {
         Util.mutationOperator = BERReduction.class;
-        assertThrows(UnmodifiedProgramException.class, () -> Util.iterationMutationUntilResolved(prePath, postPath, "BERReduction4"));
+        assertFalse(Util.iterationMutationUntilResolved(prePath, postPath, "BERReduction4"));
     }
 
     @Test

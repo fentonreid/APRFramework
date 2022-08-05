@@ -6,8 +6,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestGNR {
     String prePath = "MutationOperatorFiles/GNR/Pre/";
@@ -141,9 +140,9 @@ public class TestGNR {
 
     @Test
     @DisplayName("GNR19")
-    public void testGNR19() {
+    public void testGNR19() throws Exception {
         Util.mutationOperator = GNR.class;
-        assertThrows(UnmodifiedProgramException.class, () -> Util.iterationMutationUntilResolved(prePath, postPath, "GNR19"));
+        assertFalse(Util.iterationMutationUntilResolved(prePath, postPath, "GNR19"));
     }
 
     @Test
