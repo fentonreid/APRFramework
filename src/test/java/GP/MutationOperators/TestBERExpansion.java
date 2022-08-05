@@ -1,8 +1,11 @@
 package GP.MutationOperators;
 
+import GP.GP.UnmodifiedProgramException;
 import GP.Util;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestBERExpansion {
@@ -39,16 +42,16 @@ public class TestBERExpansion {
 
     @Test
     @DisplayName("BERExpansion5")
-    public void testBERExpansion5() throws Exception {
+    public void testBERExpansion5() {
         Util.mutationOperator = BERExpansion.class;
-        assertTrue(Util.iterationMutationUntilResolved(prePath, postPath, "BERExpansion5"));
+        assertThrows(UnmodifiedProgramException.class, () -> Util.iterationMutationUntilResolved(prePath, postPath, "BERExpansion5"));
     }
 
     @Test
     @DisplayName("BERExpansion6")
-    public void testBERExpansion6() throws Exception {
+    public void testBERExpansion6() {
         Util.mutationOperator = BERExpansion.class;
-        assertTrue(Util.iterationMutationUntilResolved(prePath, postPath, "BERExpansion6"));
+        assertThrows(UnmodifiedProgramException.class, () -> Util.iterationMutationUntilResolved(prePath, postPath, "BERExpansion6"));
     }
 
     @Test

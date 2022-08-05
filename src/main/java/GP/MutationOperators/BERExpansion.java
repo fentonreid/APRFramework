@@ -52,8 +52,6 @@ public final class BERExpansion {
         }
 
         randomExpression.replace(resultingExpression);
-
-        System.out.println("RESULTING EXPRESSION: " + resultingExpression);
         return program.clone();
     }
 

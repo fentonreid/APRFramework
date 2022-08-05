@@ -1,8 +1,11 @@
 package GP.MutationOperators;
 
+import GP.GP.UnmodifiedProgramException;
 import GP.Util;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestLRRelocation {
@@ -88,15 +91,15 @@ public class TestLRRelocation {
 
     @Test
     @DisplayName("LRRelocation12")
-    public void testLRRelocation12() throws Exception {
+    public void testLRRelocation12() {
         Util.mutationOperator = LRRelocation.class;
-        assertTrue(Util.iterationMutationUntilResolved(prePath, postPath, "LRRelocation12"));
+        assertThrows(UnmodifiedProgramException.class, () -> Util.iterationMutationUntilResolved(prePath, postPath, "LRRelocation12"));
     }
 
     @Test
     @DisplayName("LRRelocation13")
-    public void testLRRelocation13() throws Exception {
+    public void testLRRelocation13() {
         Util.mutationOperator = LRRelocation.class;
-        assertTrue(Util.iterationMutationUntilResolved(prePath, postPath, "LRRelocation13"));
+        assertThrows(UnmodifiedProgramException.class, () -> Util.iterationMutationUntilResolved(prePath, postPath, "LRRelocation13"));
     }
 }

@@ -17,16 +17,10 @@ public class APRFramework {
         // Ensure clean setup
         File checkoutFolder = new File("/tmp/checkout/");
         File tempCheckoutFolder = new File("src/test/java/Util/Lang_1_test");
-        File error_shell = new File("error_shell");
-        File output_shell = new File("output_shell");
-
 
         if(checkoutFolder.exists()) { FileUtils.deleteDirectory(checkoutFolder); }
-        //if(outputFolder.exists()) { FileUtils.deleteDirectory(outputFolder); }
         if (tempCheckoutFolder.exists()) { FileUtils.deleteDirectory(tempCheckoutFolder); }
-        if (tempCheckoutFolder.exists()) { FileUtils.deleteDirectory(error_shell); }
-        if (tempCheckoutFolder.exists()) { FileUtils.deleteDirectory(output_shell); }
-        
+
         // Call parserRunner
         ParserRunner.main("config.yml");
 

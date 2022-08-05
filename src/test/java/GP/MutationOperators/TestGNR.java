@@ -1,9 +1,12 @@
 package GP.MutationOperators;
 
+import GP.GP.UnmodifiedProgramException;
 import GP.Util;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestGNR {
@@ -138,9 +141,9 @@ public class TestGNR {
 
     @Test
     @DisplayName("GNR19")
-    public void testGNR19() throws Exception {
+    public void testGNR19() {
         Util.mutationOperator = GNR.class;
-        assertTrue(Util.iterationMutationUntilResolved(prePath, postPath, "GNR19"));
+        assertThrows(UnmodifiedProgramException.class, () -> Util.iterationMutationUntilResolved(prePath, postPath, "GNR19"));
     }
 
     @Test
