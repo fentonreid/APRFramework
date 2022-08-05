@@ -33,6 +33,10 @@ WORKDIR /defects4j
 RUN cpanm --installdeps . && \
     ./init.sh && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+	
+# Custom command to replace defects4j.build.xml file to one that allows fork and timeout, to stop hanging
+RUN sed -i 's/<junit printsummary="yes" haltonfailure="no" haltonerror="no" fork="no" showOutput="true">/<junit printsummary="yes" haltonfailure="no" haltonerror="no" fork="on" forkmode="once" showOutput="true" timeout="180000">/' /defects4j/framework/projects/defects4j.build.xml
+
     
 #############################################################################
 # Maven setup
@@ -62,7 +66,5 @@ RUN wget https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache
 WORKDIR /APRFramework
 COPY . .
 
-# mvn compile exec:java -Dexec.mainClass="APRFramework"
-
-#RUN mvn clean compile assembly:single
-#CMD java -jar target/APRFramework-jar-with-dependencies.jar
+RUN mvn clean compile assembly:single
+CMD java -jar target/APRFramework-jar-with-dependencies.jar

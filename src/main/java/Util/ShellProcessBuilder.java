@@ -99,12 +99,21 @@ public final class ShellProcessBuilder {
         return output;
     }
 
-    public static String getFailingTestCases(String[] command, String programPath) {
+	/**
+	* Get the standard input of the defects4j test command, return the number of failing test cases as a string if found
+	* 
+	* @param 		A String array that specifies the command for the process builder to execute
+	* @return		The number of failing test cases of a given project, null if an error occurred
+	*/
+    public static String getFailingTestCases(String[] command) {
         try {
-            ProcessBuilder ps = new ProcessBuilder(command);
-            ps.directory(new File(programPath));
-            ps.redirectErrorStream(true);
-
+			List<String> updatedCommand = new ArrayList<>(Arrays.asList(command));
+			updatedCommand.add("2>");
+			updatedCommand.add("/dev/null");
+			
+            ProcessBuilder ps = new ProcessBuilder(updatedCommand);
+			ps.directory(new File("../defects4j/framework/bin/"));
+			
             Process runningProcess = ps.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(runningProcess.getInputStream()));
 

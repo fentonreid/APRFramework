@@ -56,8 +56,8 @@ public final class GPThread extends Thread {
                 ShellProcessBuilder.runCommand(new String[]{"perl", "/defects4j/framework/bin/defects4j", "compile"}, new File(programPath));
 
                 // Defects4j run tests on program
-                String failingTests = ShellProcessBuilder.getFailingTestCases(new String[] {"perl", "/defects4j/framework/bin/defects4j", "test", "-r"}, programPath);
-
+                String failingTests = ShellProcessBuilder.getFailingTestCases(new String[] {"perl", "/defects4j/framework/bin/defects4j", "test", "-r", "-w", programPath});
+				
                 if (failingTests == null) { fitnessResults.add(10_000); continue; }
 
                 System.out.println(currentProgramCount + " :: NO ERROR HAS OCCURRED, (FAILING TESTS): " + failingTests);

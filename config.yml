@@ -5,7 +5,7 @@ gp:
   mutationOperators:
     - LRR
   iterationsPerBug: 10
-  numberOfThreads: 1
+  numberOfThreads: 2
 
 defects4j:
   testCaseSelection:
@@ -23,5 +23,12 @@ output:
   csv: summary
   javadoc: false
   uploadToPatchViewer: false
-  uploadToGeneratePatches: true
+  uploadToGeneratePatches: false
   gp: true
+
+
+# Docker run command to copy over the users config.yml if present and map output and javadoc directories
+# docker run -v ${pwd}/config.yml:/APRFramework/config.yml -v ${pwd}/output/:/output/ -v ${pwd}/javadoc/:/javadoc/ dev  -> command to users
+# docker run -v ${pwd}/:/APRFramework dev          -> debugging
+
+# docker run -v %cd%/config.yml:/APRFramework/config.yml -v %cd%/output/:/output/ -v %cd%/javadoc/:/javadoc/ dev

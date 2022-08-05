@@ -72,6 +72,9 @@ public final class GPRunner {
                 Path buggyFilePath = ProjectPaths.getBuggyProgramPath(checkoutPath);
                 String sourceDirectory = ProjectPaths.getSourceDirectoryPath(checkoutPath);
 
+                // Get the original buggy program in an AST format for use at the start of each iteration
+                CompilationUnit originalBuggyAST = AbstractSyntaxTree.generateAST(Paths.get(checkoutPath + buggyFilePath), checkoutPath, sourceDirectory);
+
                 for (String mutationOperator : ParserRunner.gp.mutationOperators) {
                     ArrayList<CompilationUnit> patches = new ArrayList<>();
 
@@ -79,9 +82,7 @@ public final class GPRunner {
                         System.out.println("STARTING TO RUN FOR GP: " + mutationOperator + ": "  + identifier + " " + bid + " :" + i);
 
                         long startIterationTime = System.nanoTime();
-                        CompilationUnit buggyAST = AbstractSyntaxTree.generateAST(Paths.get(checkoutPath + buggyFilePath), checkoutPath, sourceDirectory);
-
-                        CompilationUnit currentIterationPatch = new GP(buggyAST, Class.forName("GP.MutationOperators." + mutationOperator), checkoutFolderBase, buggyFilePath.toString()).main();
+                        CompilationUnit currentIterationPatch = new GP(originalBuggyAST.clone(), Class.forName("GP.MutationOperators." + mutationOperator), checkoutFolderBase, buggyFilePath.toString()).main();
                         if (currentIterationPatch != null) {
                             patches.add(currentIterationPatch);
 
@@ -98,13 +99,19 @@ public final class GPRunner {
 
                             // Upload patch to Firebase
                             if (ParserRunner.output.uploadToGeneratePatches) {
-                                try { Firebase.UploadPatchToFirebase("generatedpatches.json", params); }
-                                catch (Exception ex) { System.out.println("Failed to upload generated patch to firebase: " + identifier + " " + bid); }
+                                try {
+                                    Firebase.UploadPatchToFirebase("generatedpatches.json", params);
+                                } catch (Exception ex) {
+                                    System.out.println("Failed to upload generated patch to firebase: " + identifier + " " + bid);
+                                }
                             }
-                        }
 
-                        long endIterationTime = System.nanoTime();
-                        CSVOutput.addIterationBreakdownEntry(i, mutationOperator, 1, CSVOutput.formatTime(startIterationTime, endIterationTime));
+                            long endIterationTime = System.nanoTime();
+                            CSVOutput.addIterationBreakdownEntry(i, mutationOperator, 1, CSVOutput.formatTime(startIterationTime, endIterationTime));
+                        } else {
+                            long endIterationTime = System.nanoTime();
+                            CSVOutput.addIterationBreakdownEntry(i, mutationOperator, 0, CSVOutput.formatTime(startIterationTime, endIterationTime));
+                        }
                     }
 
                     // Copy patches for the current bug into /output/{identifier}_{bid}/{mutationOperator}/{patchNumber}

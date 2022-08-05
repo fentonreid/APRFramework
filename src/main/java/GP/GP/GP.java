@@ -138,9 +138,9 @@ public final class GP {
                     // Check to make sure all test cases are passed if not don't add to valid patches
                     Files.write(Paths.get(programPath + "/1/" +  buggyProgramPath), fittestProgram.toString().getBytes());
                     ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath+"/1/"});
-                    ArrayList<String> testResults = ShellProcessBuilder.getStandardInput(new String[]{"perl", "defects4j", "test", "-w", programPath+"/1/"});
-
-                    if (testResults.size() == 1) {
+                    String failingCases = ShellProcessBuilder.getFailingTestCases(new String[]{"perl", "defects4j", "test", "-w", programPath+"/1/"});
+					
+                    if (failingCases != null && failingCases.equals("0")) {
                         CSVOutput.patchesGenerated.add(generation);
                         return fittestProgram.clone();
                     }

@@ -62,14 +62,6 @@ public final class CSVOutput {
      */
     public static void addIterationBreakdownEntry(int iteration, String mutationOperator, int numberOfPatchesFound, String totalTimeTaken) {
         String iterationString = String.valueOf(iteration);
-        for (String[] line : iterationDetails) {
-            if (line.length > 3 && line[2].equals(iterationString)) {
-                iterationString = "";
-                break;
-            }
-        }
-
-        if (iterationString.equals(String.valueOf(iteration)) && iterationDetails.size() != 1) { iterationDetails.add(new String[]{""}); }
 
         iterationDetails.add(new String[]{"", "", iterationString, mutationOperator,
                                   String.valueOf(numberOfPatchesFound),
