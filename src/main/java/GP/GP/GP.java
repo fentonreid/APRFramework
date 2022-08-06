@@ -25,6 +25,8 @@ public final class GP {
     int fitnessOfFittestProgram;
     int chunkSize;
 
+    int foundAtGeneration;
+
     /**
      * The constructor for the GP class, initialises the field variables; ast, mutationOperator, programPath and buggyProgramPath.
      * The population is also initialised to the population size filled with the original buggy defects4j program.
@@ -45,6 +47,7 @@ public final class GP {
         this.programPath = programPath;
         this.ast = ast.clone();
         this.chunkSize = populationSize/ParserRunner.gp.numberOfThreads;
+        this.foundAtGeneration = -1;
 
         // Initialise arraylist population with original ast to population size
         for (int count=0; count<populationSize; count++) {
@@ -139,9 +142,9 @@ public final class GP {
                     Files.write(Paths.get(programPath + "/1/" +  buggyProgramPath), fittestProgram.toString().getBytes());
                     ShellProcessBuilder.runCommand(new String[]{"perl", "defects4j", "compile", "-w", programPath+"/1/"});
                     String failingCases = ShellProcessBuilder.getFailingTestCases(new String[]{"perl", "defects4j", "test", "-w", programPath+"/1/"});
-					
+
                     if (failingCases != null && failingCases.equals("0")) {
-                        CSVOutput.patchesGenerated.add(generation);
+                        foundAtGeneration = generation;
                         return fittestProgram.clone();
                     }
                 }

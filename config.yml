@@ -1,10 +1,10 @@
 gp:
   generations: 10
-  populationSize: 50
+  populationSize: 20
   mutationRate: 1
   mutationOperators:
     - LRR
-  iterationsPerBug: 10
+  iterationsPerBug: 5
   numberOfThreads: 2
 
 defects4j:

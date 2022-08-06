@@ -43,7 +43,6 @@ public final class MutationThread extends Thread {
             } catch (InvocationTargetException ite) {
                 if (ite.getCause() instanceof UnmodifiedProgramException) { System.out.println("Unmodified Program Exception here:\t" + " " + ite.getCause().getMessage()); }
                 else { System.out.println("Tried to apply a mutation but it failed");}
-                //+ ite.getCause().getMessage() + Arrays.toString(ite.getStackTrace()) + ite.getLocalizedMessage()); }
 
                 mutatedPopulation.add(ast.clone());
 

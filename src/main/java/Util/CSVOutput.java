@@ -14,7 +14,6 @@ public final class CSVOutput {
     public static ArrayList<String[]> csvData;
     public static ArrayList<String[]> generalDetails;
     public static ArrayList<String[]> iterationDetails;
-    public static ArrayList<Integer> patchesGenerated;
     public static String passesAllTests;
 
     /**
@@ -24,9 +23,7 @@ public final class CSVOutput {
         csvData = new ArrayList<>();
         generalDetails = new ArrayList<>();
         iterationDetails = new ArrayList<>();
-        patchesGenerated = new ArrayList<>();
         passesAllTests = "";
-
         generalDetails.add(new String[]{"General Details", "", "Generations", "Population Size", "Mutation Rate", "Number Of Threads", "Estimated Compile Time (s)", "Estimated Test Time (s)", "Number of Relevant Test Classes", "Number of Total Test Classes"});
         iterationDetails.add(new String[]{"Iteration Breakdown", "", "Iteration", "Mutation Operator", "Patch found at generation", "All Tests Passed", "Total time taken (s)"});
     }
@@ -57,14 +54,14 @@ public final class CSVOutput {
      *
      * @param iteration                The iteration that the patch was solved on
      * @param mutationOperator         The mutation operator that was used to create the patch
-     * @param numberOfPatchesFound     The number of patches that were added to the patch
+     * @param generationFound          The generation at which the patch was found
      * @param totalTimeTaken           The total time taken to generate the patch
      */
-    public static void addIterationBreakdownEntry(int iteration, String mutationOperator, int numberOfPatchesFound, String totalTimeTaken) {
+    public static void addIterationBreakdownEntry(int iteration, String mutationOperator, int generationFound, String totalTimeTaken) {
         String iterationString = String.valueOf(iteration);
 
         iterationDetails.add(new String[]{"", "", iterationString, mutationOperator,
-                                  String.valueOf(numberOfPatchesFound),
+                                  String.valueOf(generationFound),
                                   passesAllTests.equals("") ? "YES" : passesAllTests,
                                   String.valueOf(totalTimeTaken)
         });

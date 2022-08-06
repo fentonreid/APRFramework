@@ -82,7 +82,9 @@ public final class GPRunner {
                         System.out.println("STARTING TO RUN FOR GP: " + mutationOperator + ": "  + identifier + " " + bid + " :" + i);
 
                         long startIterationTime = System.nanoTime();
-                        CompilationUnit currentIterationPatch = new GP(originalBuggyAST.clone(), Class.forName("GP.MutationOperators." + mutationOperator), checkoutFolderBase, buggyFilePath.toString()).main();
+                        GP currentGP = new GP(originalBuggyAST.clone(), Class.forName("GP.MutationOperators." + mutationOperator), checkoutFolderBase, buggyFilePath.toString());
+                        CompilationUnit currentIterationPatch = currentGP.main();
+
                         if (currentIterationPatch != null) {
                             patches.add(currentIterationPatch);
 
@@ -107,10 +109,7 @@ public final class GPRunner {
                             }
 
                             long endIterationTime = System.nanoTime();
-                            CSVOutput.addIterationBreakdownEntry(i, mutationOperator, 1, CSVOutput.formatTime(startIterationTime, endIterationTime));
-                        } else {
-                            long endIterationTime = System.nanoTime();
-                            CSVOutput.addIterationBreakdownEntry(i, mutationOperator, 0, CSVOutput.formatTime(startIterationTime, endIterationTime));
+                            CSVOutput.addIterationBreakdownEntry(i, mutationOperator, currentGP.foundAtGeneration, CSVOutput.formatTime(startIterationTime, endIterationTime));
                         }
                     }
 
