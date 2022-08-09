@@ -131,7 +131,7 @@ public final class GP {
             // Get index of the min value in the list
             int localMinFitness = Collections.min(fitnessResults);
 
-            if (localMinFitness < fitnessOfFittestProgram) {
+            if (localMinFitness < fitnessOfFittestProgram || localMinFitness == 0) {
                 fittestProgram = population.get(fitnessResults.indexOf(localMinFitness));
                 fitnessOfFittestProgram = localMinFitness;
 
@@ -152,7 +152,7 @@ public final class GP {
 
             // High fitness values of 10_000, which is the default value given to mutations that fail have a 75% chance of being left unmodified
             for (int i=0; i<populationSize; i++) {
-                if (fitnessResults.get(i) >= 10_000 && Math.random() < 0.75) {
+                if (fitnessResults.get(i) >= 10_000 && Math.random() > 0.75) {
                     population.set(i, ast.clone());
                 }
             }
